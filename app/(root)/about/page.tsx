@@ -65,7 +65,7 @@ const AboutPage = () => {
             </p>
             <div className="flex justify-center">
               <Image
-                src="/ai-avatar.png"
+                src="/VchatLogo.png"
                 alt="AI Avatar"
                 width={200}
                 height={200}

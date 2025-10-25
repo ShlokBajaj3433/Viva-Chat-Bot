@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
+import { InterviewConfigForm, InterviewConfig } from "./InterviewConfigForm";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -118,6 +119,8 @@ const Agent = ({
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
+  const [showConfigForm, setShowConfigForm] = useState(true);
+  const [interviewConfig, setInterviewConfig] = useState<InterviewConfig>({});
 
   useEffect(() => {
     const onCallStart = () => {
@@ -217,7 +220,7 @@ const Agent = ({
     }
   }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
 
-  const handleCall = async () => {
+  const handleCall = async (config?: InterviewConfig) => {
     setCallStatus(CallStatus.CONNECTING);
 
     try {
@@ -307,6 +310,7 @@ const Agent = ({
         const result = await startUsingWorkflow({
           username: userName,
           userid: userId,
+          ...config, // Include user-provided configuration
         });
 
         if (!result.ok) {
@@ -351,11 +355,30 @@ const Agent = ({
           .join("\n");
       }
 
+      // Build configuration summary for the interviewer
+      let configSummary = "";
+      if (config && Object.keys(config).length > 0) {
+        const parts: string[] = [];
+        if (config.subject) parts.push(`Subject: ${config.subject}`);
+        if (config.year) parts.push(`Year: ${config.year}`);
+        if (config.topics) parts.push(`Topics: ${config.topics}`);
+        if (config.type) parts.push(`Interview Type: ${config.type}`);
+
+        if (parts.length > 0) {
+          configSummary =
+            "\n\nCandidate has already provided:\n" +
+            parts.join("\n") +
+            "\n\nDo NOT ask about these details again. Proceed directly with the interview questions.";
+        }
+      }
+
       const result = await startUsingWorkflow({
         questions: formattedQuestions,
         username: userName,
         userid: userId,
         interviewId,
+        configSummary, // Pass the configuration summary to the workflow
+        ...config, // Include all config fields
       });
 
       if (!result.ok) {
@@ -428,6 +451,30 @@ const Agent = ({
     await vapi.stop();
   };
 
+  const handleConfigStart = (config: InterviewConfig) => {
+    setInterviewConfig(config);
+    setShowConfigForm(false);
+    handleCall(config);
+  };
+
+  const handleConfigSkip = () => {
+    setShowConfigForm(false);
+    handleCall();
+  };
+
+  // Show configuration form if call is inactive and form hasn't been dismissed
+  if (showConfigForm && callStatus === CallStatus.INACTIVE) {
+    return (
+      <div className="w-full min-h-[600px] flex items-center justify-center p-4">
+        <InterviewConfigForm
+          onStart={handleConfigStart}
+          onSkip={handleConfigSkip}
+          isLoading={false}
+        />
+      </div>
+    );
+  }
+
   return (
     <>
       <div className="call-view">
@@ -435,7 +482,7 @@ const Agent = ({
         <div className="card-interviewer">
           <div className="avatar">
             <Image
-              src="/ai-avatar.png"
+              src="/VchatLogo.png"
               alt="profile-image"
               width={65}
               height={54}

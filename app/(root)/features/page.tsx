@@ -29,7 +29,7 @@ const FeaturesPage = () => {
         "Topic-focused practice sessions",
         "Continuous learning algorithm",
       ],
-      image: "/tech.svg",
+      image: "/AI Question.jpg",
     },
     {
       icon: Mic,
@@ -42,7 +42,7 @@ const FeaturesPage = () => {
         "Accent-adaptive technology",
         "Background noise filtering",
       ],
-      image: "/ai-avatar.png",
+      image: "/VchatLogo.png",
     },
     {
       icon: BarChart3,

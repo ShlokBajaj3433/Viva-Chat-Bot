@@ -52,6 +52,15 @@ const Navbar = () => {
 
   const navItems = [
     { name: "Home", href: "/", icon: Home },
+    { name: "Features", href: "/features", icon: Star },
+    { name: "Subjects", href: "/subjects", icon: GraduationCap },
+    { name: "Practice", href: "/practice-modes", icon: Target },
+    { name: "Interviews", href: "/past-interviews", icon: History },
+    { name: "Leaderboard", href: "/leaderboard", icon: Trophy },
+  ];
+
+  const mobileNavItems = [
+    { name: "Home", href: "/", icon: Home },
     { name: "About", href: "/about", icon: BookOpen },
     { name: "Features", href: "/features", icon: Star },
     { name: "Subjects", href: "/subjects", icon: GraduationCap },
@@ -62,11 +71,14 @@ const Navbar = () => {
   ];
 
   return (
-    <nav className="bg-white/80 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
+      <div className="w-full mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-16 max-w-[1400px] mx-auto">
           {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2">
+          <Link
+            href="/"
+            className="flex items-center space-x-2.5 flex-shrink-0"
+          >
             <Image
               src="/VchatLogo.png"
               alt="Viva Chat Bot"
@@ -80,57 +92,62 @@ const Navbar = () => {
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-8">
-            {navItems.map((item) => {
-              const IconComponent = item.icon;
-              return (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 transition-colors duration-200"
-                >
-                  <IconComponent className="w-4 h-4" />
-                  <span>{item.name}</span>
-                </Link>
-              );
-            })}
+          <div className="hidden lg:flex items-center justify-center flex-1 mx-8">
+            <div className="flex items-center space-x-4 xl:space-x-6 2xl:space-x-8">
+              {navItems.map((item) => {
+                const IconComponent = item.icon;
+                return (
+                  <Link
+                    key={item.name}
+                    href={item.href}
+                    className="flex items-center space-x-1.5 text-gray-600 hover:text-blue-600 transition-all duration-200 whitespace-nowrap text-sm font-medium group"
+                  >
+                    <IconComponent className="w-4 h-4 flex-shrink-0 group-hover:scale-110 transition-transform" />
+                    <span>{item.name}</span>
+                  </Link>
+                );
+              })}
+            </div>
           </div>
 
           {/* User Menu */}
-          <div className="hidden md:flex items-center space-x-4">
+          <div className="hidden lg:flex items-center space-x-3 flex-shrink-0">
             {user ? (
               <div className="relative">
                 <button
                   onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                  className="flex items-center space-x-2 text-gray-700 hover:text-blue-600 transition-colors duration-200"
+                  className="flex items-center space-x-2.5 text-gray-700 hover:text-blue-600 transition-colors duration-200 whitespace-nowrap rounded-lg hover:bg-blue-50 px-3 py-2"
                 >
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                    <User className="w-4 h-4 text-blue-600" />
+                  <div className="w-9 h-9 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                    <User className="w-5 h-5 text-white" />
                   </div>
-                  <span className="font-medium">{user.name}</span>
+                  <span className="font-semibold text-sm">{user.name}</span>
                 </button>
 
                 {isDropdownOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 border">
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-xl py-2 border border-gray-100 animate-in fade-in slide-in-from-top-2 duration-200">
                     <Link
                       href="/interview"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
                     >
-                      <BookOpen className="w-4 h-4 mr-2" />
+                      <BookOpen className="w-4 h-4 mr-3" />
                       Start Interview
                     </Link>
                     <Link
                       href="/profile"
-                      className="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex items-center px-4 py-2.5 text-sm text-gray-700 hover:bg-blue-50 hover:text-blue-600 transition-colors"
+                      onClick={() => setIsDropdownOpen(false)}
                     >
-                      <Settings className="w-4 h-4 mr-2" />
+                      <Settings className="w-4 h-4 mr-3" />
                       Profile Settings
                     </Link>
+                    <div className="border-t border-gray-100 my-1"></div>
                     <button
                       onClick={handleSignOut}
-                      className="flex items-center w-full px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      className="flex items-center w-full px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"
                     >
-                      <LogOut className="w-4 h-4 mr-2" />
+                      <LogOut className="w-4 h-4 mr-3" />
                       Sign Out
                     </button>
                   </div>
@@ -139,22 +156,31 @@ const Navbar = () => {
             ) : (
               <div className="flex items-center space-x-3">
                 <Link href="/sign-in">
-                  <Button variant="outline" size="sm">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="whitespace-nowrap border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold"
+                  >
                     Sign In
                   </Button>
                 </Link>
                 <Link href="/sign-up">
-                  <Button size="sm">Get Started</Button>
+                  <Button
+                    size="sm"
+                    className="whitespace-nowrap bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md hover:shadow-lg transition-all font-semibold"
+                  >
+                    Get Started
+                  </Button>
                 </Link>
               </div>
             )}
           </div>
 
           {/* Mobile menu button */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <button
               onClick={() => setIsOpen(!isOpen)}
-              className="text-gray-700 hover:text-blue-600 transition-colors duration-200"
+              className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 transition-colors duration-200 p-2 rounded-lg"
             >
               {isOpen ? (
                 <X className="w-6 h-6" />
@@ -167,18 +193,18 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isOpen && (
-          <div className="md:hidden border-t border-gray-200 bg-white">
+          <div className="lg:hidden border-t border-gray-200 bg-white shadow-lg">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {navItems.map((item) => {
+              {mobileNavItems.map((item) => {
                 const IconComponent = item.icon;
                 return (
                   <Link
                     key={item.name}
                     href={item.href}
-                    className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md transition-colors duration-200"
+                    className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all duration-200 font-medium"
                     onClick={() => setIsOpen(false)}
                   >
-                    <IconComponent className="w-4 h-4" />
+                    <IconComponent className="w-5 h-5" />
                     <span>{item.name}</span>
                   </Link>
                 );
@@ -188,50 +214,55 @@ const Navbar = () => {
               <div className="border-t border-gray-200 pt-4 mt-4">
                 {user ? (
                   <div className="space-y-1">
-                    <div className="flex items-center space-x-2 px-3 py-2">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <User className="w-4 h-4 text-blue-600" />
+                    <div className="flex items-center space-x-3 px-4 py-3 bg-blue-50 rounded-lg">
+                      <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md">
+                        <User className="w-5 h-5 text-white" />
                       </div>
-                      <span className="font-medium text-gray-900">
+                      <span className="font-semibold text-gray-900">
                         {user.name}
                       </span>
                     </div>
                     <Link
                       href="/interview"
-                      className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                       onClick={() => setIsOpen(false)}
                     >
-                      <BookOpen className="w-4 h-4" />
-                      <span>Start Interview</span>
+                      <BookOpen className="w-5 h-5" />
+                      <span className="font-medium">Start Interview</span>
                     </Link>
                     <Link
                       href="/profile"
-                      className="flex items-center space-x-2 px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                      className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                       onClick={() => setIsOpen(false)}
                     >
-                      <Settings className="w-4 h-4" />
-                      <span>Profile Settings</span>
+                      <Settings className="w-5 h-5" />
+                      <span className="font-medium">Profile Settings</span>
                     </Link>
                     <button
                       onClick={() => {
                         handleSignOut();
                         setIsOpen(false);
                       }}
-                      className="flex items-center space-x-2 w-full px-3 py-2 text-gray-700 hover:text-blue-600 hover:bg-gray-50 rounded-md"
+                      className="flex items-center space-x-3 w-full px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all"
                     >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign Out</span>
+                      <LogOut className="w-5 h-5" />
+                      <span className="font-medium">Sign Out</span>
                     </button>
                   </div>
                 ) : (
-                  <div className="space-y-2 px-3">
+                  <div className="space-y-3 px-3">
                     <Link href="/sign-in" onClick={() => setIsOpen(false)}>
-                      <Button variant="outline" className="w-full">
+                      <Button
+                        variant="outline"
+                        className="w-full border-2 border-blue-600 text-blue-600 hover:bg-blue-50 font-semibold"
+                      >
                         Sign In
                       </Button>
                     </Link>
                     <Link href="/sign-up" onClick={() => setIsOpen(false)}>
-                      <Button className="w-full">Get Started</Button>
+                      <Button className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 shadow-md font-semibold">
+                        Get Started
+                      </Button>
                     </Link>
                   </div>
                 )}
