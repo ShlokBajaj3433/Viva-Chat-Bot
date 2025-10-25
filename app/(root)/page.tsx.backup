@@ -1,0 +1,57 @@
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+
+export default function Home() {
+  return (
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-7xl mx-auto px-4 py-16">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold text-gray-900 mb-6">
+            Welcome to VivaChat
+          </h1>
+          <p className="text-xl text-gray-600 mb-8">
+            AI-powered viva practice platform for students
+          </p>
+          <div className="space-x-4">
+            <Link href="/subjects">
+              <Button size="lg">Explore Subjects</Button>
+            </Link>
+            <Link href="/practice-modes">
+              <Button variant="outline" size="lg">Practice Modes</Button>
+            </Link>
+          </div>
+        </div>
+        
+        <div className="mt-16 grid grid-cols-1 md:grid-cols-4 gap-8">
+          <Link href="/subjects" className="group">
+            <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Popular Subjects</h3>
+              <p className="text-gray-600 text-sm">Explore 50+ subjects with practice sessions</p>
+            </div>
+          </Link>
+
+          <Link href="/practice-modes" className="group">
+            <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Practice Modes</h3>
+              <p className="text-gray-600 text-sm">6 different modes for your learning style</p>
+            </div>
+          </Link>
+
+          <Link href="/past-interviews" className="group">
+            <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Past Interviews</h3>
+              <p className="text-gray-600 text-sm">Review your interview history and progress</p>
+            </div>
+          </Link>
+
+          <Link href="/leaderboard" className="group">
+            <div className="bg-white p-6 rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2">Leaderboard</h3>
+              <p className="text-gray-600 text-sm">Compete with students worldwide</p>
+            </div>
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
