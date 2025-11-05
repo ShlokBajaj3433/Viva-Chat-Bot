@@ -121,6 +121,22 @@ const Agent = ({
   const [lastMessage, setLastMessage] = useState<string>("");
   const [showConfigForm, setShowConfigForm] = useState(true);
   const [interviewConfig, setInterviewConfig] = useState<InterviewConfig>({});
+  const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+
+  // Check for prefilled interview data from subjects page
+  useEffect(() => {
+    const prefilledData = sessionStorage.getItem("prefilledInterview");
+    if (prefilledData) {
+      try {
+        const config = JSON.parse(prefilledData);
+        setInterviewConfig(config);
+        // Clear the data after reading
+        sessionStorage.removeItem("prefilledInterview");
+      } catch (error) {
+        console.error("Error parsing prefilled interview data:", error);
+      }
+    }
+  }, []);
 
   useEffect(() => {
     const onCallStart = () => {
@@ -195,6 +211,7 @@ const Agent = ({
 
     const handleGenerateFeedback = async (messages: SavedMessage[]) => {
       console.log("handleGenerateFeedback");
+      setIsGeneratingFeedback(true);
 
       const { success, feedbackId: id } = await createFeedback({
         interviewId: interviewId!,
@@ -202,6 +219,8 @@ const Agent = ({
         transcript: messages,
         feedbackId,
       });
+
+      setIsGeneratingFeedback(false);
 
       if (success && id) {
         router.push(`/interview/${interviewId}/feedback`);
@@ -307,9 +326,29 @@ const Agent = ({
       };
 
       if (type === "generate") {
+        // Build configuration instructions for generate type
+        let configInstructions = "";
+        if (config && Object.keys(config).length > 0) {
+          const providedInfo: string[] = [];
+          if (config.subject) providedInfo.push(`Subject: ${config.subject}`);
+          if (config.year) providedInfo.push(`Year: ${config.year}`);
+          if (config.topics) providedInfo.push(`Topics: ${config.topics}`);
+          if (config.type) providedInfo.push(`Interview Type: ${config.type}`);
+
+          if (providedInfo.length > 0) {
+            configInstructions =
+              "\n\n=== USER HAS PRE-CONFIGURED ===\n" +
+              providedInfo.join("\n") +
+              "\n\nDO NOT ask about: name, subject, year, semester, topics, or interview type.\n" +
+              "Start directly with interview questions.\n" +
+              "=== END PRE-CONFIGURED ===\n";
+          }
+        }
+
         const result = await startUsingWorkflow({
           username: userName,
           userid: userId,
+          configInstructions, // Pass instructions to skip redundant questions
           ...config, // Include user-provided configuration
         });
 
@@ -359,16 +398,35 @@ const Agent = ({
       let configSummary = "";
       if (config && Object.keys(config).length > 0) {
         const parts: string[] = [];
-        if (config.subject) parts.push(`Subject: ${config.subject}`);
-        if (config.year) parts.push(`Year: ${config.year}`);
-        if (config.topics) parts.push(`Topics: ${config.topics}`);
+        if (config.subject) parts.push(`Subject/Course: ${config.subject}`);
+        if (config.year) parts.push(`Year/Semester: ${config.year}`);
+        if (config.topics) parts.push(`Topics to Cover: ${config.topics}`);
         if (config.type) parts.push(`Interview Type: ${config.type}`);
+        if (config.isTechnical !== undefined) {
+          parts.push(
+            `Technical Focus: ${
+              config.isTechnical
+                ? "Yes - Prefer technical/practical questions"
+                : "No - Prefer conceptual questions"
+            }`
+          );
+        }
 
         if (parts.length > 0) {
           configSummary =
-            "\n\nCandidate has already provided:\n" +
+            "\n\n=== PRE-CONFIGURED INFORMATION ===\n" +
+            "The candidate has already provided the following details:\n" +
             parts.join("\n") +
-            "\n\nDo NOT ask about these details again. Proceed directly with the interview questions.";
+            "\n\n⚠️ IMPORTANT INSTRUCTIONS:\n" +
+            "1. DO NOT ask the candidate about any of these details again\n" +
+            "2. DO NOT ask for their name, subject, year, or topics - you already have this information\n" +
+            "3. Skip all introductory questions about background and preferences\n" +
+            "4. Start DIRECTLY with the interview questions based on the topics provided\n" +
+            "5. Focus your questions on: " +
+            (config.topics || config.subject || "general knowledge") +
+            "\n" +
+            "6. Keep the interview focused and efficient\n" +
+            "=== END PRE-CONFIGURED INFORMATION ===\n";
         }
       }
 
@@ -470,6 +528,7 @@ const Agent = ({
           onStart={handleConfigStart}
           onSkip={handleConfigSkip}
           isLoading={false}
+          initialConfig={interviewConfig}
         />
       </div>
     );
@@ -477,6 +536,38 @@ const Agent = ({
 
   return (
     <>
+      {isGeneratingFeedback && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-2xl p-8 max-w-md mx-4 text-center shadow-2xl">
+            <div className="mb-4">
+              <div className="w-16 h-16 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto"></div>
+            </div>
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">
+              Generating Your Report 📊
+            </h3>
+            <p className="text-gray-600 mb-4">
+              Our AI is analyzing your interview performance and creating a
+              comprehensive feedback report...
+            </p>
+            <div className="flex items-center justify-center space-x-2 text-sm text-blue-600">
+              <span className="animate-pulse">●</span>
+              <span
+                className="animate-pulse"
+                style={{ animationDelay: "0.2s" }}
+              >
+                ●
+              </span>
+              <span
+                className="animate-pulse"
+                style={{ animationDelay: "0.4s" }}
+              >
+                ●
+              </span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="call-view">
         {/* AI Interviewer Card */}
         <div className="card-interviewer">
@@ -546,6 +637,33 @@ const Agent = ({
           </button>
         )}
       </div>
+
+      {/* Show View Report button after interview ends */}
+      {callStatus === CallStatus.FINISHED &&
+        interviewId &&
+        type === "interview" && (
+          <div className="w-full flex justify-center mt-6">
+            <button
+              onClick={() => router.push(`/interview/${interviewId}/feedback`)}
+              className="px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-green-700 hover:to-green-800 transition-all hover:-translate-y-0.5 flex items-center gap-2"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              View Your Report
+            </button>
+          </div>
+        )}
     </>
   );
 };

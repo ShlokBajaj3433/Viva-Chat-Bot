@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Input } from "./ui/input";
 import { Label } from "./ui/label";
@@ -14,18 +14,24 @@ export interface InterviewConfig {
   level?: string;
   techstack?: string;
   isTechnical?: boolean;
+  numberOfQuestions?: number;
+  timeLimit?: number;
+  difficulty?: string;
+  focusArea?: string;
 }
 
 interface InterviewConfigFormProps {
   onStart: (config: InterviewConfig) => void;
   onSkip: () => void;
   isLoading?: boolean;
+  initialConfig?: InterviewConfig;
 }
 
 export const InterviewConfigForm = ({
   onStart,
   onSkip,
   isLoading = false,
+  initialConfig,
 }: InterviewConfigFormProps) => {
   const [config, setConfig] = useState<InterviewConfig>({
     subject: "",
@@ -33,14 +39,30 @@ export const InterviewConfigForm = ({
     topics: "",
     type: "",
     isTechnical: false,
+    numberOfQuestions: 10,
+    timeLimit: 20,
+    difficulty: "intermediate",
+    focusArea: "",
   });
+
+  // Update config when initialConfig is provided
+  useEffect(() => {
+    if (initialConfig) {
+      setConfig((prev) => ({ ...prev, ...initialConfig }));
+    }
+  }, [initialConfig]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     // Filter out empty values
     const filteredConfig = Object.entries(config).reduce(
       (acc, [key, value]) => {
-        if (value !== "" && value !== false) {
+        if (
+          value !== "" &&
+          value !== false &&
+          value !== undefined &&
+          value !== null
+        ) {
           acc[key as keyof InterviewConfig] = value;
         }
         return acc;
@@ -53,7 +75,7 @@ export const InterviewConfigForm = ({
 
   const handleChange = (
     field: keyof InterviewConfig,
-    value: string | boolean
+    value: string | boolean | number
   ) => {
     setConfig((prev) => ({ ...prev, [field]: value }));
   };
@@ -199,6 +221,127 @@ export const InterviewConfigForm = ({
           </Label>
         </div>
 
+        {/* Number of Questions & Time Limit */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-2">
+            <Label
+              htmlFor="numberOfQuestions"
+              className="text-sm font-semibold text-gray-700 flex items-center"
+            >
+              <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+              🔢 Number of Questions
+            </Label>
+            <div className="relative">
+              <Input
+                id="numberOfQuestions"
+                type="number"
+                min="1"
+                max="50"
+                placeholder="10"
+                value={config.numberOfQuestions}
+                onChange={(e) =>
+                  handleChange(
+                    "numberOfQuestions",
+                    parseInt(e.target.value) || 10
+                  )
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-all"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                questions
+              </div>
+            </div>
+            <p className="text-xs text-gray-600 mt-1">
+              Recommended: 5-20 questions
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label
+              htmlFor="timeLimit"
+              className="text-sm font-semibold text-gray-700 flex items-center"
+            >
+              <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+              ⏱️ Time Limit
+            </Label>
+            <div className="relative">
+              <Input
+                id="timeLimit"
+                type="number"
+                min="5"
+                max="120"
+                placeholder="20"
+                value={config.timeLimit}
+                onChange={(e) =>
+                  handleChange("timeLimit", parseInt(e.target.value) || 20)
+                }
+                disabled={isLoading}
+                className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-all"
+              />
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 text-xs text-gray-500 pointer-events-none">
+                minutes
+              </div>
+            </div>
+            <p className="text-xs text-gray-600 mt-1">
+              Recommended: 15-30 minutes
+            </p>
+          </div>
+        </div>
+
+        {/* Difficulty Level */}
+        <div className="space-y-2">
+          <Label
+            htmlFor="difficulty"
+            className="text-sm font-semibold text-gray-700 flex items-center"
+          >
+            <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+            📊 Difficulty Level
+          </Label>
+          <select
+            id="difficulty"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-gray-700 font-medium transition-all hover:border-blue-400 cursor-pointer"
+            value={config.difficulty}
+            onChange={(e) => handleChange("difficulty", e.target.value)}
+            disabled={isLoading}
+          >
+            <option value="beginner">🟢 Beginner - Easy questions</option>
+            <option value="intermediate">
+              🟡 Intermediate - Moderate difficulty
+            </option>
+            <option value="advanced">
+              🔴 Advanced - Challenging questions
+            </option>
+            <option value="expert">🔥 Expert - Very difficult</option>
+            <option value="adaptive">
+              🎯 Adaptive - Adjusts to your level
+            </option>
+          </select>
+        </div>
+
+        {/* Focus Area */}
+        <div className="space-y-2">
+          <Label
+            htmlFor="focusArea"
+            className="text-sm font-semibold text-gray-700 flex items-center"
+          >
+            <span className="w-2 h-2 bg-blue-600 rounded-full mr-2"></span>
+            🎯 Special Focus Area (Optional)
+          </Label>
+          <Input
+            id="focusArea"
+            type="text"
+            placeholder="e.g., Problem solving, Theory, Practical applications"
+            value={config.focusArea}
+            onChange={(e) => handleChange("focusArea", e.target.value)}
+            disabled={isLoading}
+            className="border-gray-300 focus:border-blue-500 focus:ring-blue-500 transition-all"
+          />
+          <p className="text-sm text-gray-600 mt-1">
+            Any specific area you want to focus on during the interview
+          </p>
+        </div>
+
         {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-4 pt-6">
           <Button
@@ -223,11 +366,29 @@ export const InterviewConfigForm = ({
       </form>
 
       <div className="mt-6 p-5 bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-xl shadow-sm">
-        <p className="text-sm text-blue-900 leading-relaxed">
+        <p className="text-sm text-blue-900 leading-relaxed mb-2">
           <strong className="font-bold text-blue-700">💡 Pro Tip:</strong>{" "}
-          Filling in these details helps customize your interview and ensures
-          the interviewer doesn't ask redundant questions during the viva.
+          Customizing these settings helps tailor your interview experience to
+          your needs.
         </p>
+        <ul className="text-xs text-blue-800 space-y-1 ml-4 list-disc">
+          <li>
+            <strong>Questions & Time:</strong> Adjust based on your availability
+            and preparation level
+          </li>
+          <li>
+            <strong>Difficulty:</strong> Choose adaptive mode to let AI adjust
+            to your performance
+          </li>
+          <li>
+            <strong>Topics:</strong> Be specific to avoid redundant questions
+            during the interview
+          </li>
+          <li>
+            <strong>Focus Area:</strong> Helps the AI emphasize specific aspects
+            you want to practice
+          </li>
+        </ul>
       </div>
     </div>
   );

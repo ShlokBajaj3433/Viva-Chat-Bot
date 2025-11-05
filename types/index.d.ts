@@ -11,6 +11,30 @@ interface Feedback {
   areasForImprovement: string[];
   finalAssessment: string;
   createdAt: string;
+  // New comprehensive structure fields
+  studentInfo?: any;
+  questionEvaluations?: Array<{
+    questionNumber: number;
+    question: string;
+    studentAnswer: string;
+    evaluation: string;
+    marksAwarded: number;
+    maxMarks: number;
+  }>;
+  performanceSummary?: {
+    totalMarks: number;
+    marksObtained: number;
+    percentage: number;
+    grade: string;
+    overallPerformance: string;
+  };
+  communicationInsights?: any;
+  finalFeedback?: {
+    strengths: string[];
+    areasForImprovement: string[];
+    recommendation: string;
+    finalAssessment: string;
+  };
 }
 
 interface Interview {

@@ -462,4 +462,77 @@
   .animate-ping {
     animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite;
   }
+
+  /* Auth Form Styles */
+  .card {
+    background: white;
+    border-radius: 1rem;
+  }
+
+  .text-primary-100 {
+    font-size: 1.875rem;
+    font-weight: 700;
+    background: linear-gradient(to right, rgb(37, 99, 235), rgb(79, 70, 229));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .form {
+    width: 100%;
+  }
+
+  .label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgb(55, 65, 81);
+    margin-bottom: 0.5rem;
+  }
+
+  .input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 1px solid rgb(209, 213, 219);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background-color: rgb(249, 250, 251);
+  }
+
+  .input:focus {
+    outline: none;
+    border-color: rgb(59, 130, 246);
+    background-color: white;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.3);
+  }
+
+  .btn {
+    width: 100%;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(to right, rgb(37, 99, 235), rgb(29, 78, 216));
+    color: white;
+    font-weight: 600;
+    border-radius: 0.5rem;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1),
+      0 4px 6px -4px rgba(0, 0, 0, 0.1);
+    transition: all 0.2s;
+  }
+
+  .btn:hover {
+    background: linear-gradient(to right, rgb(29, 78, 216), rgb(30, 64, 175));
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
+      0 8px 10px -6px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .text-user-primary {
+    color: rgb(37, 99, 235);
+  }
+
+  .text-user-primary:hover {
+    color: rgb(29, 78, 216);
+  }
 }

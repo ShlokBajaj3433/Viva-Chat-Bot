@@ -443,41 +443,6 @@ async function Home() {
               </div>
             </div>
           </section>
-
-          {/* Available Interviews Section */}
-          <section className="bg-white py-20">
-            <div className={`${pageContainer}`}>
-              <h2 className="mb-8 text-3xl font-bold text-gray-900">
-                Practice with others
-              </h2>
-
-              <div className="interviews-section">
-                {hasUpcomingInterviews ? (
-                  allInterview?.map((interview) => (
-                    <InterviewCard
-                      key={interview.id}
-                      userId={user?.id}
-                      interviewId={interview.id}
-                      role={interview.role}
-                      type={interview.type}
-                      techstack={interview.techstack}
-                      createdAt={interview.createdAt}
-                    />
-                  ))
-                ) : (
-                  <div className="rounded-3xl bg-slate-50 p-10 text-center shadow-sm">
-                    <Users className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-                    <h3 className="text-xl font-semibold text-gray-900">
-                      No shared sessions available
-                    </h3>
-                    <p className="mt-2 text-gray-600">
-                      Check back later for community practice sessions.
-                    </p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </section>
         </>
       )}
 

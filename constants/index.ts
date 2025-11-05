@@ -151,7 +151,50 @@ End the conversation on a polite and positive note.
 };
 
 export const feedbackSchema = z.object({
-  totalScore: z.number(),
+  // Student & Viva Information
+  studentInfo: z.object({
+    studentName: z.string(),
+    subject: z.string(),
+    year: z.string(),
+    topics: z.string(),
+    vivaType: z.string(),
+    difficultyLevel: z.string(),
+    dateTime: z.string(),
+    totalQuestions: z.number(),
+  }),
+
+  // Question-wise Evaluation
+  questionEvaluations: z.array(
+    z.object({
+      questionNumber: z.number(),
+      question: z.string(),
+      studentAnswer: z.string(),
+      evaluation: z.string(),
+      marksAwarded: z.number(),
+      maxMarks: z.number(),
+    })
+  ),
+
+  // Performance Summary
+  performanceSummary: z.object({
+    totalMarks: z.number(),
+    marksObtained: z.number(),
+    percentage: z.number(),
+    grade: z.string(),
+    overallPerformance: z.string(),
+  }),
+
+  // Communication & Behavioural Insights
+  communicationInsights: z.object({
+    confidenceLevel: z.string(),
+    clarityOfExplanation: z.string(),
+    problemSolvingApproach: z.string(),
+    useOfExamples: z.string(),
+    engagementLevel: z.string(),
+    detailedAnalysis: z.string(),
+  }),
+
+  // Category Scores (for backwards compatibility)
   categoryScores: z.tuple([
     z.object({
       name: z.literal("Communication Skills"),
@@ -179,9 +222,17 @@ export const feedbackSchema = z.object({
       comment: z.string(),
     }),
   ]),
-  strengths: z.array(z.string()),
-  areasForImprovement: z.array(z.string()),
-  finalAssessment: z.string(),
+
+  // Final Feedback & Recommendation
+  finalFeedback: z.object({
+    strengths: z.array(z.string()),
+    areasForImprovement: z.array(z.string()),
+    recommendation: z.string(),
+    finalAssessment: z.string(),
+  }),
+
+  // Total Score (for backwards compatibility)
+  totalScore: z.number(),
 });
 
 export const interviewCovers = [

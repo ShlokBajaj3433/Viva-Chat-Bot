@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import {
   BookOpen,
   Users,
@@ -21,6 +24,25 @@ import {
 import { Button } from "@/components/ui/button";
 
 const SubjectsPage = () => {
+  const router = useRouter();
+
+  const handleStartInterview = (subject: (typeof popularSubjects)[0]) => {
+    // Store subject data in sessionStorage to be used by the interview page
+    const interviewConfig = {
+      subject: subject.name,
+      topics: subject.topics.join(", "),
+      type: "mock", // You can change this to "practice" if needed
+      isTechnical: true,
+      year: "2024",
+    };
+
+    sessionStorage.setItem(
+      "prefilledInterview",
+      JSON.stringify(interviewConfig)
+    );
+    router.push("/interview");
+  };
+
   const popularSubjects = [
     {
       id: "network-security",
@@ -282,7 +304,11 @@ const SubjectsPage = () => {
                         </div>
                       </div>
 
-                      <Button className="w-full" size="lg">
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={() => handleStartInterview(subject)}
+                      >
                         <Play className="w-4 h-4 mr-2" />
                         Start Practice
                       </Button>
@@ -342,7 +368,12 @@ const SubjectsPage = () => {
                     <span>{subject.avgScore}% avg</span>
                   </div>
 
-                  <Button variant="outline" size="sm" className="w-full">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full"
+                    onClick={() => handleStartInterview(subject)}
+                  >
                     <BookOpen className="w-4 h-4 mr-2" />
                     Practice Now
                   </Button>

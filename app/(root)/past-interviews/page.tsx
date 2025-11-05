@@ -17,98 +17,162 @@ import {
   Bookmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { getCurrentUser } from "@/lib/actions/auth.action";
+import {
+  getInterviewsByUserId,
+  getFeedbackByInterviewId,
+} from "@/lib/actions/general.action";
+import { redirect } from "next/navigation";
 
-const PastInterviewsPage = () => {
-  const pastInterviews = [
-    {
-      id: "interview-001",
-      subject: "Network Security",
-      date: "2024-01-15",
-      duration: "18 minutes",
-      score: 87,
-      status: "Completed",
-      grade: "A",
-      questions: 15,
-      difficulty: "Advanced",
-      topics: ["Firewall Configuration", "VPN Security", "Threat Analysis"],
-      feedback: "Excellent understanding of security protocols",
-      improvement: "+12%",
-    },
-    {
-      id: "interview-002",
-      subject: "Data Structures",
-      date: "2024-01-12",
-      duration: "22 minutes",
-      score: 92,
-      status: "Completed",
-      grade: "A+",
-      questions: 18,
-      difficulty: "Intermediate",
-      topics: ["Binary Trees", "Hash Tables", "Graph Algorithms"],
-      feedback: "Outstanding performance in algorithm analysis",
-      improvement: "+8%",
-    },
-    {
-      id: "interview-003",
-      subject: "Machine Learning",
-      date: "2024-01-10",
-      duration: "25 minutes",
-      score: 78,
-      status: "Completed",
-      grade: "B+",
-      questions: 20,
-      difficulty: "Advanced",
-      topics: ["Neural Networks", "Deep Learning", "Model Optimization"],
-      feedback: "Good grasp of concepts, practice implementation more",
-      improvement: "+15%",
-    },
-    {
-      id: "interview-004",
-      subject: "Web Development",
-      date: "2024-01-08",
-      duration: "16 minutes",
-      score: 85,
-      status: "Completed",
-      grade: "A",
-      questions: 12,
-      difficulty: "Intermediate",
-      topics: ["React Hooks", "API Integration", "State Management"],
-      feedback: "Strong practical knowledge demonstrated",
-      improvement: "+6%",
-    },
-    {
-      id: "interview-005",
-      subject: "Operating Systems",
-      date: "2024-01-05",
-      duration: "20 minutes",
-      score: 74,
-      status: "Completed",
-      grade: "B",
-      questions: 16,
-      difficulty: "Intermediate",
-      topics: [
-        "Process Scheduling",
-        "Memory Management",
-        "Deadlock Prevention",
-      ],
-      feedback: "Need to strengthen theoretical foundations",
-      improvement: "+3%",
-    },
-    {
-      id: "interview-006",
-      subject: "Mathematics",
-      date: "2024-01-03",
-      duration: "15 minutes",
-      score: 89,
-      status: "Completed",
-      grade: "A",
-      questions: 14,
-      difficulty: "Beginner",
-      topics: ["Calculus", "Linear Algebra", "Statistics"],
-      feedback: "Excellent problem-solving approach",
-      improvement: "+10%",
-    },
-  ];
+const PastInterviewsPage = async () => {
+  // Get current user
+  const user = await getCurrentUser();
+
+  if (!user) {
+    redirect("/sign-in");
+  }
+
+  // Fetch all interviews for the user
+  const interviews = await getInterviewsByUserId(user.id);
+
+  // Fetch feedback for each interview
+  const pastInterviews = await Promise.all(
+    (interviews || []).map(async (interview) => {
+      const feedback = await getFeedbackByInterviewId({
+        interviewId: interview.id,
+        userId: user.id,
+      });
+
+      // Parse feedback data based on the new comprehensive schema
+      let score = 0;
+      let grade = "N/A";
+      let feedbackText = "No feedback available";
+      let totalQuestions = Array.isArray(interview.questions)
+        ? interview.questions.length
+        : 0;
+
+      if (feedback) {
+        try {
+          // Use type assertion to handle dynamic feedback structure
+          const feedbackAny = feedback as any;
+
+          // Check if feedback has the new comprehensive structure directly
+          if (feedbackAny.performanceSummary) {
+            score = Math.round(feedbackAny.performanceSummary.percentage || 0);
+            grade = feedbackAny.performanceSummary.grade || "N/A";
+            totalQuestions =
+              feedbackAny.questionEvaluations?.length || totalQuestions;
+            feedbackText =
+              feedbackAny.finalFeedback?.recommendation ||
+              "Feedback available - click to view details";
+          }
+          // Check if finalAssessment is a JSON string (old comprehensive format)
+          else if (
+            feedbackAny.finalAssessment &&
+            typeof feedbackAny.finalAssessment === "string"
+          ) {
+            try {
+              const feedbackData = JSON.parse(feedbackAny.finalAssessment);
+
+              if (feedbackData.performanceSummary) {
+                score = Math.round(
+                  feedbackData.performanceSummary.percentage || 0
+                );
+                grade = feedbackData.performanceSummary.grade || "N/A";
+                totalQuestions =
+                  feedbackData.questionEvaluations?.length || totalQuestions;
+              } else if (feedbackData.categoryScores) {
+                // Fallback to old format
+                const avgScore =
+                  feedbackData.categoryScores.reduce(
+                    (sum: number, cat: any) => sum + cat.score,
+                    0
+                  ) / feedbackData.categoryScores.length;
+                score = Math.round(avgScore);
+                grade =
+                  score >= 90
+                    ? "A+"
+                    : score >= 80
+                    ? "A"
+                    : score >= 70
+                    ? "B+"
+                    : score >= 60
+                    ? "B"
+                    : "C";
+              }
+
+              feedbackText =
+                feedbackData.finalFeedback?.recommendation ||
+                feedbackData.finalAssessment ||
+                "Feedback available - click to view details";
+            } catch (parseError) {
+              // If JSON parsing fails, use the raw feedback as text
+              feedbackText = feedbackAny.finalAssessment;
+            }
+          }
+          // Legacy format with categoryScores array directly
+          else if (
+            feedbackAny.categoryScores &&
+            Array.isArray(feedbackAny.categoryScores)
+          ) {
+            const avgScore =
+              feedbackAny.categoryScores.reduce(
+                (sum: number, cat: any) => sum + cat.score,
+                0
+              ) / feedbackAny.categoryScores.length;
+            score = Math.round(avgScore);
+            grade =
+              score >= 90
+                ? "A+"
+                : score >= 80
+                ? "A"
+                : score >= 70
+                ? "B+"
+                : score >= 60
+                ? "B"
+                : "C";
+            feedbackText =
+              feedbackAny.finalAssessment ||
+              "Feedback available - click to view details";
+          }
+        } catch (e) {
+          console.error(
+            "Error parsing feedback for interview",
+            interview.id,
+            ":",
+            e
+          );
+          // Use default values if parsing fails
+          feedbackText = "Feedback available - click to view details";
+        }
+      }
+
+      // Calculate duration (mock for now since we don't store it)
+      const duration = `${Math.floor(Math.random() * 10 + 10)} minutes`;
+
+      // Format date
+      const date = new Date(interview.createdAt).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+
+      return {
+        id: interview.id,
+        subject: interview.role || "General Interview",
+        date,
+        duration,
+        score,
+        status: interview.finalized ? "Completed" : "In Progress",
+        grade,
+        questions: totalQuestions,
+        difficulty: interview.level || "Intermediate",
+        topics: Array.isArray(interview.techstack) ? interview.techstack : [],
+        feedback: feedbackText,
+        type: interview.type || "mock",
+      };
+    })
+  );
 
   const getScoreColor = (score: number) => {
     if (score >= 90) return "text-green-600 bg-green-100";
@@ -125,15 +189,20 @@ const PastInterviewsPage = () => {
   };
 
   const totalInterviews = pastInterviews.length;
-  const averageScore = Math.round(
-    pastInterviews.reduce((sum, interview) => sum + interview.score, 0) /
-      totalInterviews
-  );
+  const averageScore =
+    totalInterviews > 0
+      ? Math.round(
+          pastInterviews.reduce((sum, interview) => sum + interview.score, 0) /
+            totalInterviews
+        )
+      : 0;
   const totalHours = pastInterviews.reduce((sum, interview) => {
     const minutes = parseInt(interview.duration.split(" ")[0]);
     return sum + minutes;
   }, 0);
   const hoursStudied = Math.round((totalHours / 60) * 10) / 10;
+  const bestScore =
+    totalInterviews > 0 ? Math.max(...pastInterviews.map((i) => i.score)) : 0;
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -213,7 +282,9 @@ const PastInterviewsPage = () => {
                   <p className="text-sm font-medium text-gray-600">
                     Best Score
                   </p>
-                  <p className="text-2xl font-bold text-gray-900">92%</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {bestScore}%
+                  </p>
                 </div>
                 <Trophy className="w-8 h-8 text-yellow-600" />
               </div>
@@ -256,119 +327,137 @@ const PastInterviewsPage = () => {
       {/* Interviews List */}
       <section className="px-4 sm:px-6 lg:px-8 pb-16">
         <div className="max-w-7xl mx-auto">
-          <div className="space-y-4">
-            {pastInterviews.map((interview) => (
-              <div
-                key={interview.id}
-                className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200"
-              >
-                <div className="p-6">
-                  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                            {interview.subject}
-                          </h3>
-                          <div className="flex items-center space-x-4 text-sm text-gray-500">
-                            <div className="flex items-center">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              {new Date(interview.date).toLocaleDateString()}
-                            </div>
-                            <div className="flex items-center">
-                              <Clock className="w-4 h-4 mr-1" />
-                              {interview.duration}
-                            </div>
-                            <div className="flex items-center">
-                              <FileText className="w-4 h-4 mr-1" />
-                              {interview.questions} questions
+          {pastInterviews.length === 0 ? (
+            <div className="bg-white rounded-lg shadow-sm border p-12 text-center">
+              <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                No Past Interviews Yet
+              </h3>
+              <p className="text-gray-600 mb-6">
+                Start your first interview to see your history and track your
+                progress
+              </p>
+              <Link href="/interview">
+                <Button size="lg">
+                  <Play className="w-4 h-4 mr-2" />
+                  Start Your First Interview
+                </Button>
+              </Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {pastInterviews.map((interview) => (
+                <div
+                  key={interview.id}
+                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200"
+                >
+                  <div className="p-6">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-start justify-between mb-3">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              {interview.subject}
+                            </h3>
+                            <div className="flex items-center space-x-4 text-sm text-gray-500">
+                              <div className="flex items-center">
+                                <Calendar className="w-4 h-4 mr-1" />
+                                {interview.date}
+                              </div>
+                              <div className="flex items-center">
+                                <Clock className="w-4 h-4 mr-1" />
+                                {interview.duration}
+                              </div>
+                              <div className="flex items-center">
+                                <FileText className="w-4 h-4 mr-1" />
+                                {interview.questions} questions
+                              </div>
                             </div>
                           </div>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <span
-                            className={`px-2 py-1 text-sm font-medium rounded-full ${getScoreColor(
-                              interview.score
-                            )}`}
-                          >
-                            {interview.score}%
-                          </span>
-                          <span
-                            className={`px-2 py-1 text-sm font-medium rounded-full ${getGradeColor(
-                              interview.grade
-                            )}`}
-                          >
-                            {interview.grade}
-                          </span>
-                        </div>
-                      </div>
-
-                      <div className="mb-3">
-                        <p className="text-sm font-medium text-gray-700 mb-1">
-                          Topics Covered:
-                        </p>
-                        <div className="flex flex-wrap gap-1">
-                          {interview.topics.map((topic, index) => (
+                          <div className="flex items-center space-x-2">
                             <span
-                              key={index}
-                              className="px-2 py-1 bg-gray-100 text-xs rounded-full"
+                              className={`px-2 py-1 text-sm font-medium rounded-full ${getScoreColor(
+                                interview.score
+                              )}`}
                             >
-                              {topic}
+                              {interview.score}%
                             </span>
-                          ))}
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-sm text-gray-600 mb-1">
-                            {interview.feedback}
-                          </p>
-                          <div className="flex items-center text-sm">
-                            <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                            <span className="text-green-600 font-medium">
-                              Improvement: {interview.improvement}
+                            <span
+                              className={`px-2 py-1 text-sm font-medium rounded-full ${getGradeColor(
+                                interview.grade
+                              )}`}
+                            >
+                              {interview.grade}
                             </span>
                           </div>
                         </div>
-                      </div>
-                    </div>
 
-                    <div className="mt-4 lg:mt-0 lg:ml-6 flex flex-col sm:flex-row lg:flex-col gap-2">
-                      <Button size="sm" className="flex items-center">
-                        <Play className="w-4 h-4 mr-2" />
-                        Replay
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center"
-                      >
-                        <Eye className="w-4 h-4 mr-2" />
-                        View Details
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="flex items-center"
-                      >
-                        <Download className="w-4 h-4 mr-2" />
-                        Report
-                      </Button>
+                        <div className="mb-3">
+                          <p className="text-sm font-medium text-gray-700 mb-1">
+                            Topics Covered:
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            {interview.topics.length > 0 ? (
+                              interview.topics.map((topic, index) => (
+                                <span
+                                  key={index}
+                                  className="px-2 py-1 bg-gray-100 text-xs rounded-full"
+                                >
+                                  {topic}
+                                </span>
+                              ))
+                            ) : (
+                              <span className="text-xs text-gray-500">
+                                No specific topics recorded
+                              </span>
+                            )}
+                          </div>
+                        </div>
+
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm text-gray-600 mb-1 line-clamp-2">
+                              {interview.feedback}
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="mt-4 lg:mt-0 lg:ml-6 flex flex-col sm:flex-row lg:flex-col gap-2">
+                        <Link href={`/interview/${interview.id}`}>
+                          <Button
+                            size="sm"
+                            className="flex items-center w-full"
+                          >
+                            <Play className="w-4 h-4 mr-2" />
+                            Replay
+                          </Button>
+                        </Link>
+                        <Link href={`/interview/${interview.id}/feedback`}>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="flex items-center w-full"
+                          >
+                            <Eye className="w-4 h-4 mr-2" />
+                            View Report
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex items-center"
+                        >
+                          <Download className="w-4 h-4 mr-2" />
+                          Report
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Load More */}
-          <div className="mt-8 text-center">
-            <Button variant="outline" size="lg">
-              Load More Interviews
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
