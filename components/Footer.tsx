@@ -82,7 +82,7 @@ const Footer = () => {
           <div className="lg:col-span-2">
             <Link href="/" className="flex items-center space-x-2 mb-4">
               <Image
-                src="/VchatLogo.png"
+                src="/vchatLogo.png"
                 alt="VivaChat"
                 width={32}
                 height={32}

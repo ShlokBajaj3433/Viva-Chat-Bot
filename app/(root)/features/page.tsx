@@ -42,7 +42,7 @@ const FeaturesPage = () => {
         "Accent-adaptive technology",
         "Background noise filtering",
       ],
-      image: "/VchatLogo.png",
+      image: "/vchatLogo.png",
     },
     {
       icon: BarChart3,

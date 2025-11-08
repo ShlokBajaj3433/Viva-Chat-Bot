@@ -80,7 +80,7 @@ const Navbar = () => {
             className="flex items-center space-x-2.5 flex-shrink-0"
           >
             <Image
-              src="/VchatLogo.png"
+              src="/vchatLogo.png"
               alt="Viva Chat Bot"
               width={32}
               height={32}

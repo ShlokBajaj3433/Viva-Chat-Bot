@@ -17,11 +17,8 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Exclude canvg and related packages from server-side bundling
+  // Exclude canvg and related packages from server-side bundling to fix Turbopack errors
   serverExternalPackages: ["canvg", "canvas", "dompurify", "@xmldom/xmldom"],
-  experimental: {
-    serverComponentsExternalPackages: ["canvg", "canvas"],
-  },
 };
 
 export default nextConfig;
