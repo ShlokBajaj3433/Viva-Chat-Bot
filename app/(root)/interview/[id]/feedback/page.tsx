@@ -9,6 +9,7 @@ import {
 } from "@/lib/actions/general.action";
 import { Button } from "@/components/ui/button";
 import { getCurrentUser } from "@/lib/actions/auth.action";
+import DownloadPDFButton from "@/components/DownloadPDFButton";
 
 const Feedback = async ({ params }: RouteParams) => {
   const { id } = await params;
@@ -22,17 +23,62 @@ const Feedback = async ({ params }: RouteParams) => {
     userId: user?.id!,
   });
 
-  // Parse the comprehensive feedback
-  let comprehensiveFeedback: any = null;
-  let isNewFormat = false;
+  // If no feedback exists yet, show a message
+  if (!feedback) {
+    return (
+      <section className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 py-12 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
+              📊 Interview Feedback Report
+            </h1>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl p-12 text-center">
+            <div className="mb-6">
+              <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-2">
+                Generating Your Feedback...
+              </h2>
+              <p className="text-gray-600">
+                Your interview feedback is being generated. This may take a few
+                moments. Please refresh this page in a moment.
+              </p>
+            </div>
+            <Link href="/">
+              <Button className="mt-4">Return Home</Button>
+            </Link>
+          </div>
+        </div>
+      </section>
+    );
+  }
 
-  try {
-    if (feedback?.finalAssessment) {
-      comprehensiveFeedback = JSON.parse(feedback.finalAssessment);
-      isNewFormat = !!comprehensiveFeedback.performanceSummary;
+  // Check if feedback uses new comprehensive structure
+  // The new format stores the data directly in the feedback object, not as JSON string
+  const isNewFormat = !!feedback?.performanceSummary;
+
+  // For backwards compatibility, try to parse finalAssessment if it exists as a JSON string
+  let comprehensiveFeedback: any = null;
+
+  if (isNewFormat) {
+    // New format: data is already structured in the feedback object
+    comprehensiveFeedback = feedback;
+  } else if (
+    feedback?.finalAssessment &&
+    typeof feedback.finalAssessment === "string"
+  ) {
+    // Old format: try to parse JSON string (but only if it looks like JSON)
+    try {
+      if (
+        feedback.finalAssessment.trim().startsWith("{") ||
+        feedback.finalAssessment.trim().startsWith("[")
+      ) {
+        comprehensiveFeedback = JSON.parse(feedback.finalAssessment);
+      }
+    } catch (e) {
+      console.error("Error parsing feedback:", e);
+      // If parsing fails, it's just a plain text string - that's okay
     }
-  } catch (e) {
-    console.error("Error parsing feedback:", e);
   }
 
   return (
@@ -41,11 +87,20 @@ const Feedback = async ({ params }: RouteParams) => {
         {/* Header */}
         <div className="text-center mb-8">
           <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent mb-3">
-            📊 Interview Feedback Report
+             Interview Feedback Report
           </h1>
           <p className="text-xl text-gray-600 capitalize">
             {interview.role} - {interview.type} Interview
           </p>
+
+          {/* Download PDF Button */}
+          <div className="mt-6 flex justify-center">
+            <DownloadPDFButton
+              feedback={feedback}
+              interview={interview}
+              isNewFormat={isNewFormat}
+            />
+          </div>
         </div>
 
         {/* Performance Summary Card */}

@@ -43,7 +43,7 @@ const FeatureTabs = ({ items }: FeatureTabsProps) => {
   }
 
   return (
-    <div className="grid gap-6 lg:grid-cols-[260px_1fr]">
+    <div className="grid gap-6 lg:grid-cols-[320px_1fr]">
       <div className="flex gap-3 overflow-x-auto pb-2 lg:flex-col lg:overflow-visible lg:pb-0">
         {items.map((item, index) => {
           const Icon = ICON_MAP[item.icon] ?? (CheckCircle as LucideIcon);
@@ -55,24 +55,26 @@ const FeatureTabs = ({ items }: FeatureTabsProps) => {
               type="button"
               aria-pressed={isActive}
               onClick={() => setActiveIndex(index)}
-              className={`group flex flex-1 items-center gap-3 rounded-2xl border px-4 py-3 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 md:flex-none ${
+              className={`group flex min-w-[280px] flex-shrink-0 items-start gap-4 rounded-2xl border px-5 py-4 text-left transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 lg:min-w-0 lg:flex-1 ${
                 isActive
-                  ? "border-blue-200 bg-white shadow-sm"
-                  : "border-transparent bg-slate-50 hover:bg-white/80"
+                  ? "border-blue-200 bg-white shadow-md"
+                  : "border-transparent bg-slate-50 hover:bg-white/80 hover:shadow-sm"
               }`}
             >
               <span
-                className={`flex h-10 w-10 items-center justify-center rounded-xl text-white transition-transform duration-200 ${
+                className={`flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-xl text-white shadow-md transition-all duration-200 ${
                   isActive ? item.accentClassName : "bg-slate-300"
-                } ${isActive ? "scale-100" : "scale-95"}`}
+                } ${isActive ? "scale-100" : "scale-95"} group-hover:scale-105`}
               >
-                <Icon className="h-5 w-5" />
+                <Icon className="h-6 w-6" strokeWidth={2.5} />
               </span>
-              <div>
-                <p className="text-sm font-semibold text-slate-900">
+              <div className="flex-1 min-w-0">
+                <p className="text-base font-bold text-slate-900 mb-1">
                   {item.title}
                 </p>
-                <p className="text-xs text-slate-500">{item.description}</p>
+                <p className="text-sm text-slate-600 leading-relaxed">
+                  {item.description}
+                </p>
               </div>
             </button>
           );
@@ -81,20 +83,20 @@ const FeatureTabs = ({ items }: FeatureTabsProps) => {
 
       {activeItem && (
         <div className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm transition-all duration-300 lg:p-8">
-          <header className="flex flex-col gap-4 border-b border-slate-100 pb-4 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-3">
+          <header className="flex flex-col gap-4 border-b border-slate-100 pb-6 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-start gap-4">
               {ActiveIcon && (
                 <span
-                  className={`flex h-12 w-12 items-center justify-center rounded-xl text-white ${activeItem.accentClassName}`}
+                  className={`flex h-14 w-14 flex-shrink-0 items-center justify-center rounded-2xl text-white shadow-lg transition-transform duration-300 hover:scale-105 ${activeItem.accentClassName}`}
                 >
-                  <ActiveIcon className="h-6 w-6" />
+                  <ActiveIcon className="h-7 w-7" strokeWidth={2} />
                 </span>
               )}
-              <div>
-                <h3 className="text-xl font-semibold text-slate-900">
+              <div className="flex-1 min-w-0">
+                <h3 className="text-2xl font-bold text-slate-900 mb-2">
                   {activeItem.title}
                 </h3>
-                <p className="text-sm text-slate-500">
+                <p className="text-base text-slate-600 leading-relaxed">
                   {activeItem.description}
                 </p>
               </div>

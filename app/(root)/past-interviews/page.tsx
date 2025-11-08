@@ -23,6 +23,7 @@ import {
   getFeedbackByInterviewId,
 } from "@/lib/actions/general.action";
 import { redirect } from "next/navigation";
+import InterviewsList from "@/components/InterviewsList";
 
 const PastInterviewsPage = async () => {
   // Get current user
@@ -51,10 +52,22 @@ const PastInterviewsPage = async () => {
         ? interview.questions.length
         : 0;
 
+      // Get subject from interview's subject field (new) or role (fallback)
+      let subjectName =
+        interview.subject || interview.role || "General Interview";
+      let topics =
+        interview.topics || interview.techstack.join(", ") || "General Topics";
+      let year = interview.year || interview.level || "All Years";
+
       if (feedback) {
         try {
           // Use type assertion to handle dynamic feedback structure
           const feedbackAny = feedback as any;
+
+          // Extract subject from studentInfo if available (takes priority)
+          if (feedbackAny.studentInfo?.subject) {
+            subjectName = feedbackAny.studentInfo.subject;
+          }
 
           // Check if feedback has the new comprehensive structure directly
           if (feedbackAny.performanceSummary) {
@@ -159,7 +172,7 @@ const PastInterviewsPage = async () => {
 
       return {
         id: interview.id,
-        subject: interview.role || "General Interview",
+        subject: subjectName,
         date,
         duration,
         score,
@@ -167,9 +180,12 @@ const PastInterviewsPage = async () => {
         grade,
         questions: totalQuestions,
         difficulty: interview.level || "Intermediate",
-        topics: Array.isArray(interview.techstack) ? interview.techstack : [],
+        topics: topics.split(", ").filter(Boolean),
+        year: year,
         feedback: feedbackText,
         type: interview.type || "mock",
+        feedbackData: feedback, // Add full feedback object
+        interviewData: interview, // Add full interview object
       };
     })
   );
@@ -345,118 +361,7 @@ const PastInterviewsPage = async () => {
               </Link>
             </div>
           ) : (
-            <div className="space-y-4">
-              {pastInterviews.map((interview) => (
-                <div
-                  key={interview.id}
-                  className="bg-white rounded-lg shadow-sm border hover:shadow-md transition-shadow duration-200"
-                >
-                  <div className="p-6">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-3">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                              {interview.subject}
-                            </h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-500">
-                              <div className="flex items-center">
-                                <Calendar className="w-4 h-4 mr-1" />
-                                {interview.date}
-                              </div>
-                              <div className="flex items-center">
-                                <Clock className="w-4 h-4 mr-1" />
-                                {interview.duration}
-                              </div>
-                              <div className="flex items-center">
-                                <FileText className="w-4 h-4 mr-1" />
-                                {interview.questions} questions
-                              </div>
-                            </div>
-                          </div>
-                          <div className="flex items-center space-x-2">
-                            <span
-                              className={`px-2 py-1 text-sm font-medium rounded-full ${getScoreColor(
-                                interview.score
-                              )}`}
-                            >
-                              {interview.score}%
-                            </span>
-                            <span
-                              className={`px-2 py-1 text-sm font-medium rounded-full ${getGradeColor(
-                                interview.grade
-                              )}`}
-                            >
-                              {interview.grade}
-                            </span>
-                          </div>
-                        </div>
-
-                        <div className="mb-3">
-                          <p className="text-sm font-medium text-gray-700 mb-1">
-                            Topics Covered:
-                          </p>
-                          <div className="flex flex-wrap gap-1">
-                            {interview.topics.length > 0 ? (
-                              interview.topics.map((topic, index) => (
-                                <span
-                                  key={index}
-                                  className="px-2 py-1 bg-gray-100 text-xs rounded-full"
-                                >
-                                  {topic}
-                                </span>
-                              ))
-                            ) : (
-                              <span className="text-xs text-gray-500">
-                                No specific topics recorded
-                              </span>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm text-gray-600 mb-1 line-clamp-2">
-                              {interview.feedback}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="mt-4 lg:mt-0 lg:ml-6 flex flex-col sm:flex-row lg:flex-col gap-2">
-                        <Link href={`/interview/${interview.id}`}>
-                          <Button
-                            size="sm"
-                            className="flex items-center w-full"
-                          >
-                            <Play className="w-4 h-4 mr-2" />
-                            Replay
-                          </Button>
-                        </Link>
-                        <Link href={`/interview/${interview.id}/feedback`}>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            className="flex items-center w-full"
-                          >
-                            <Eye className="w-4 h-4 mr-2" />
-                            View Report
-                          </Button>
-                        </Link>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          className="flex items-center"
-                        >
-                          <Download className="w-4 h-4 mr-2" />
-                          Report
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <InterviewsList interviews={pastInterviews} userId={user.id} />
           )}
         </div>
       </section>

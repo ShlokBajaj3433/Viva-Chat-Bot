@@ -86,6 +86,10 @@ Instructions:
       finalized: true,
       coverImage: getRandomInterviewCover(),
       createdAt: new Date().toISOString(),
+      // Store additional fields explicitly for viva interviews
+      subject: subjectVal,
+      year: yearVal,
+      topics: topicsVal,
     };
 
     await db.collection("interviews").add(interview);

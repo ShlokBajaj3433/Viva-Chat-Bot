@@ -47,6 +47,11 @@ interface Interview {
   userId: string;
   type: string;
   finalized: boolean;
+  // Additional fields for viva interviews
+  subject?: string;
+  year?: string;
+  topics?: string;
+  bookmarked?: boolean;
 }
 
 interface CreateFeedbackParams {
@@ -65,10 +70,13 @@ interface User {
 interface InterviewCardProps {
   interviewId?: string;
   userId?: string;
-  role: string;
+  role: string; // This now contains the subject name
   type: string;
   techstack: string[];
   createdAt?: string;
+  subject?: string;
+  year?: string;
+  topics?: string;
 }
 
 interface AgentProps {

@@ -55,6 +55,10 @@ async function Home() {
         "Mixes theory and scenario-based prompts",
         "Instant follow-up questions when you need more challenge",
         "Save custom question sets for revision",
+        "Subject-specific question banks covering 50+ topics",
+        "Smart difficulty progression based on your performance",
+        "Context-aware questions that build on previous answers",
+        "Generate unlimited practice questions on demand",
       ],
       cta: {
         label: "Explore practice modes",
@@ -132,14 +136,6 @@ async function Home() {
   ];
 
   const pageContainer = "mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8";
-
-  const trustedBrands = [
-    { name: "Amazon", logo: "/covers/amazon.png" },
-    { name: "Facebook", logo: "/covers/facebook.png" },
-    { name: "Spotify", logo: "/covers/spotify.png" },
-    { name: "Pinterest", logo: "/covers/pinterest.png" },
-    { name: "Tiktok", logo: "/covers/tiktok.png" },
-  ];
 
   return (
     <div className="bg-slate-50">
@@ -219,29 +215,6 @@ async function Home() {
                     </div>
                   </div>
                 ))}
-              </div>
-
-              <div className="rounded-3xl border border-blue-100 bg-white/70 p-4 shadow-sm backdrop-blur">
-                <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                  Trusted by learners from
-                </p>
-                <div className="mt-3 flex flex-wrap items-center gap-4 sm:gap-6">
-                  {trustedBrands.map((brand) => (
-                    <div
-                      key={brand.name}
-                      className="flex items-center gap-2 text-sm font-medium text-slate-600"
-                    >
-                      <Image
-                        src={brand.logo}
-                        alt={`${brand.name} logo`}
-                        width={40}
-                        height={40}
-                        className="h-8 w-8 object-contain sm:h-10 sm:w-10"
-                      />
-                      <span>{brand.name}</span>
-                    </div>
-                  ))}
-                </div>
               </div>
             </div>
 
@@ -396,51 +369,92 @@ async function Home() {
 
       {user && (
         <>
-          {/* User's Interviews Section */}
-          <section className="bg-gray-50 py-20">
+          {/* User's Past Viva Sessions */}
+          <section className="bg-gradient-to-b from-white to-gray-50 py-20">
             <div className={`${pageContainer}`}>
-              <div className="mb-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <h2 className="text-3xl font-bold text-gray-900">
-                  Your viva sessions
-                </h2>
-                <Button asChild>
-                  <Link href="/interview">
-                    <Play className="mr-2 h-4 w-4" />
-                    New session
-                  </Link>
-                </Button>
+              <div className="mb-10 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                <div>
+                  <h2 className="text-3xl font-bold text-gray-900">
+                    Your Past Viva Sessions
+                  </h2>
+                  <p className="mt-2 text-gray-600">
+                    Review your previous interviews and track your progress
+                  </p>
+                </div>
+                <div className="flex gap-3">
+                  <Button asChild variant="outline">
+                    <Link href="/past-interviews">
+                      <Clock className="mr-2 h-4 w-4" />
+                      View all
+                    </Link>
+                  </Button>
+                  <Button asChild className="bg-blue-600 hover:bg-blue-700">
+                    <Link href="/interview">
+                      <Play className="mr-2 h-4 w-4" />
+                      New session
+                    </Link>
+                  </Button>
+                </div>
               </div>
 
               <div className="interviews-section">
                 {hasPastInterviews ? (
-                  userInterviews?.map((interview) => (
-                    <InterviewCard
-                      key={interview.id}
-                      userId={user?.id}
-                      interviewId={interview.id}
-                      role={interview.role}
-                      type={interview.type}
-                      techstack={interview.techstack}
-                      createdAt={interview.createdAt}
-                    />
-                  ))
+                  <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                    {userInterviews?.slice(0, 6).map((interview) => (
+                      <InterviewCard
+                        key={interview.id}
+                        userId={user?.id}
+                        interviewId={interview.id}
+                        role={interview.role}
+                        type={interview.type}
+                        techstack={interview.techstack}
+                        createdAt={interview.createdAt}
+                      />
+                    ))}
+                  </div>
                 ) : (
-                  <div className="rounded-3xl bg-white/80 p-10 text-center shadow-sm">
-                    <BookOpen className="mx-auto mb-4 h-16 w-16 text-gray-400" />
-                    <h3 className="text-xl font-semibold text-gray-900">
+                  <div className="rounded-3xl border-2 border-dashed border-gray-300 bg-white/80 p-12 text-center shadow-sm">
+                    <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-blue-100">
+                      <BookOpen className="h-10 w-10 text-blue-600" />
+                    </div>
+                    <h3 className="text-2xl font-bold text-gray-900">
                       No viva sessions yet
                     </h3>
-                    <p className="mt-2 text-gray-600">
-                      Start your first AI-powered viva practice session.
+                    <p className="mt-3 text-gray-600">
+                      Start your first AI-powered viva practice session and
+                      begin your journey to success.
                     </p>
-                    <div className="mt-6">
-                      <Button asChild>
-                        <Link href="/interview">Start first session</Link>
+                    <div className="mt-8 flex justify-center gap-4">
+                      <Button
+                        asChild
+                        size="lg"
+                        className="bg-blue-600 hover:bg-blue-700"
+                      >
+                        <Link href="/interview">
+                          <Play className="mr-2 h-5 w-5" />
+                          Start first session
+                        </Link>
+                      </Button>
+                      <Button asChild variant="outline" size="lg">
+                        <Link href="/subjects">Browse subjects</Link>
                       </Button>
                     </div>
                   </div>
                 )}
               </div>
+
+              {hasPastInterviews &&
+                userInterviews &&
+                userInterviews.length > 6 && (
+                  <div className="mt-8 text-center">
+                    <Button asChild variant="outline" size="lg">
+                      <Link href="/past-interviews">
+                        View all {userInterviews.length} sessions
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </Link>
+                    </Button>
+                  </div>
+                )}
             </div>
           </section>
         </>

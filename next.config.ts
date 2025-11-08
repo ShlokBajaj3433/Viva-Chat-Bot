@@ -17,6 +17,11 @@ const nextConfig: NextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
+  // Exclude canvg and related packages from server-side bundling
+  serverExternalPackages: ["canvg", "canvas", "dompurify", "@xmldom/xmldom"],
+  experimental: {
+    serverComponentsExternalPackages: ["canvg", "canvas"],
+  },
 };
 
 export default nextConfig;

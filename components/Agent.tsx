@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 
 import { cn } from "@/lib/utils";
@@ -122,6 +122,14 @@ const Agent = ({
   const [showConfigForm, setShowConfigForm] = useState(true);
   const [interviewConfig, setInterviewConfig] = useState<InterviewConfig>({});
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
+  const hasRedirectedRef = useRef(false); // Track if we've already redirected
+
+  console.log(
+    "Agent Component Rendered - Type:",
+    type,
+    "InterviewId:",
+    interviewId
+  );
 
   // Check for prefilled interview data from subjects page
   useEffect(() => {
@@ -140,10 +148,15 @@ const Agent = ({
 
   useEffect(() => {
     const onCallStart = () => {
+      console.log("📞 VAPI call started");
       setCallStatus(CallStatus.ACTIVE);
     };
 
     const onCallEnd = () => {
+      console.log("📞 VAPI call ended (onCallEnd event)");
+      console.log("   - Type:", type);
+      console.log("   - InterviewId:", interviewId);
+      console.log("   - Messages count:", messages.length);
       setCallStatus(CallStatus.FINISHED);
     };
 
@@ -208,36 +221,110 @@ const Agent = ({
     if (messages.length > 0) {
       setLastMessage(messages[messages.length - 1].content);
     }
+  }, [messages]);
 
-    const handleGenerateFeedback = async (messages: SavedMessage[]) => {
-      console.log("handleGenerateFeedback");
-      setIsGeneratingFeedback(true);
+  // Handle automatic redirect when interview ends
+  useEffect(() => {
+    console.log(
+      "🔄 useEffect triggered - CallStatus:",
+      callStatus,
+      "Type:",
+      type,
+      "HasRedirected:",
+      hasRedirectedRef.current
+    );
 
-      const { success, feedbackId: id } = await createFeedback({
-        interviewId: interviewId!,
-        userId: userId!,
-        transcript: messages,
-        feedbackId,
-      });
+    // Prevent multiple redirects
+    if (hasRedirectedRef.current) {
+      console.log("⚠️ Already redirected, skipping...");
+      return;
+    }
 
-      setIsGeneratingFeedback(false);
+    if (callStatus !== CallStatus.FINISHED) {
+      console.log("⏳ Call not finished yet, waiting...");
+      return;
+    }
 
-      if (success && id) {
-        router.push(`/interview/${interviewId}/feedback`);
+    console.log("✅ Call FINISHED detected!");
+
+    const handleGenerateFeedback = async () => {
+      console.log("📝 handleGenerateFeedback called");
+      console.log("   - Messages count:", messages.length);
+      console.log("   - Type:", type);
+      console.log("   - InterviewId:", interviewId);
+      console.log("   - UserId:", userId);
+
+      // If type is interview and interviewId exists, always redirect to feedback page
+      if (type === "interview" && interviewId) {
+        console.log("🎯 Interview mode confirmed - generating feedback...");
+        setIsGeneratingFeedback(true);
+        hasRedirectedRef.current = true; // Mark that we're handling the redirect
+
+        try {
+          console.log("🔄 Calling createFeedback...");
+          const { success, feedbackId: id } = await createFeedback({
+            interviewId: interviewId!,
+            userId: userId!,
+            transcript: messages,
+            feedbackId,
+          });
+
+          console.log(
+            "✅ createFeedback completed - Success:",
+            success,
+            "FeedbackId:",
+            id
+          );
+          setIsGeneratingFeedback(false);
+
+          // Always redirect to feedback page for interviews
+          const redirectUrl = `/interview/${interviewId}/feedback`;
+          console.log("🚀 Redirecting to:", redirectUrl);
+          router.push(redirectUrl);
+        } catch (error) {
+          console.error("❌ Error generating feedback:", error);
+          setIsGeneratingFeedback(false);
+          // Still redirect to feedback page even if there's an error
+          const redirectUrl = `/interview/${interviewId}/feedback`;
+          console.log("🚀 Redirecting to (after error):", redirectUrl);
+          router.push(redirectUrl);
+        }
       } else {
-        console.log("Error saving feedback");
-        router.push("/");
+        console.log("⚠️ Not interview mode or missing interviewId");
+        console.log("   - Type:", type, "Expected: 'interview'");
+        console.log("   - InterviewId:", interviewId);
       }
     };
 
-    if (callStatus === CallStatus.FINISHED) {
-      if (type === "generate") {
-        router.push("/");
+    if (type === "generate") {
+      console.log("🏠 Generate mode detected");
+      console.log("   - Messages count:", messages.length);
+      console.log("   - InterviewId:", interviewId);
+
+      // If we have an interviewId in generate mode, treat it like an interview
+      if (interviewId) {
+        console.log(
+          "🎤 Generate mode but has InterviewId - treating as interview"
+        );
+        hasRedirectedRef.current = true;
+        handleGenerateFeedback();
       } else {
-        handleGenerateFeedback(messages);
+        console.log(
+          "🏠 Generate mode without InterviewId - redirecting to home"
+        );
+        hasRedirectedRef.current = true;
+        router.push("/");
       }
+    } else if (type === "interview") {
+      console.log("🎤 Interview mode - starting feedback generation");
+      handleGenerateFeedback();
+    } else {
+      console.log("❓ Unknown type:", type);
+      // Fallback: if type is undefined or something else, still try to generate feedback
+      handleGenerateFeedback();
     }
-  }, [messages, callStatus, feedbackId, interviewId, router, type, userId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [callStatus, type, interviewId]);
 
   const handleCall = async (config?: InterviewConfig) => {
     setCallStatus(CallStatus.CONNECTING);
@@ -505,8 +592,23 @@ const Agent = ({
   };
 
   const handleDisconnect = async () => {
+    console.log("🛑 handleDisconnect called");
+    console.log("   - Current callStatus:", callStatus);
+    console.log("   - Type:", type);
+    console.log("   - InterviewId:", interviewId);
+    console.log("   - Messages count:", messages.length);
+
+    try {
+      console.log("🔄 Stopping VAPI call...");
+      await vapi.stop();
+      console.log("✅ VAPI call stopped successfully");
+    } catch (error) {
+      console.error("❌ Error stopping VAPI:", error);
+    }
+
+    console.log("🔄 Setting callStatus to FINISHED...");
     setCallStatus(CallStatus.FINISHED);
-    await vapi.stop();
+    console.log("✅ CallStatus set to FINISHED");
   };
 
   const handleConfigStart = (config: InterviewConfig) => {
@@ -633,35 +735,46 @@ const Agent = ({
           </button>
         ) : (
           <button className="btn-disconnect" onClick={() => handleDisconnect()}>
-            End
+            Finish Interview
           </button>
         )}
       </div>
 
-      {/* Show View Report button after interview ends */}
+      {/* Show generating feedback status or View Report button after interview ends */}
       {callStatus === CallStatus.FINISHED &&
         interviewId &&
         type === "interview" && (
           <div className="w-full flex justify-center mt-6">
-            <button
-              onClick={() => router.push(`/interview/${interviewId}/feedback`)}
-              className="px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-green-700 hover:to-green-800 transition-all hover:-translate-y-0.5 flex items-center gap-2"
-            >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+            {isGeneratingFeedback ? (
+              <div className="flex flex-col items-center gap-3">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+                <p className="text-gray-400 text-sm">
+                  Generating your feedback report...
+                </p>
+              </div>
+            ) : (
+              <button
+                onClick={() =>
+                  router.push(`/interview/${interviewId}/feedback`)
+                }
+                className="px-8 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-green-700 hover:to-green-800 transition-all hover:-translate-y-0.5 flex items-center gap-2"
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                />
-              </svg>
-              View Your Report
-            </button>
+                <svg
+                  className="w-5 h-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+                View Your Report
+              </button>
+            )}
           </div>
         )}
     </>

@@ -53,13 +53,19 @@ Analyze the entire conversation and generate a detailed evaluation following thi
 
 ### 1️⃣ Student & Viva Information
 Extract or infer:
-- Student name from transcript
+- Student name from transcript (if mentioned)
 - Subject, year, topics from context above
 - Viva type and difficulty level
-- Total questions asked
+- Total SUBJECT-RELATED questions asked (exclude greetings, introductions, and administrative questions)
 
 ### 2️⃣ Question-wise Evaluation
-For EACH question in the transcript:
+**IMPORTANT**: Only evaluate SUBJECT-RELATED questions. EXCLUDE:
+- Greeting questions (e.g., "What's your name?", "How are you?")
+- Introduction questions (e.g., "Tell me about yourself")
+- Administrative questions (e.g., "Are you ready?", "Can you hear me?")
+- Small talk and pleasantries
+
+For EACH SUBJECT-RELATED question in the transcript:
 - Identify the question asked by the assistant/interviewer
 - Summarize the student's answer (2-3 sentences)
 - Provide constructive evaluation (2-3 sentences analyzing correctness, depth, clarity)
@@ -69,9 +75,9 @@ For EACH question in the transcript:
   * Clarity and communication (0-1 point)
 
 ### 3️⃣ Performance Summary
-Calculate:
-- Total marks possible (number of questions × 5)
-- Marks obtained (sum of all question marks)
+Calculate based ONLY on subject-related questions:
+- Total marks possible (number of SUBJECT-RELATED questions × 5)
+- Marks obtained (sum of all question marks from subject-related questions only)
 - Percentage = (marks obtained / total marks) × 100
 - Grade based on percentage:
   * 90-100%: A+ (Outstanding)
@@ -109,6 +115,11 @@ Provide:
 ---
 
 ## Important Guidelines:
+- **CRITICALLY IMPORTANT**: Only evaluate and count subject-related questions. Completely ignore:
+  * Greetings (e.g., "Hello", "What's your name?", "How are you?")
+  * Introductions (e.g., "Tell me about yourself", "Are you ready to begin?")
+  * Administrative questions (e.g., "Can you hear me?", "Do you understand?")
+  * Small talk and pleasantries
 - Be thorough, fair, and constructive
 - Don't be overly lenient - point out genuine mistakes
 - Provide specific, actionable feedback
@@ -116,6 +127,7 @@ Provide:
 - If student struggled, reflect that in marks and feedback
 - If student excelled, acknowledge and celebrate it
 - Use professional, academic tone throughout
+- Focus ONLY on technical/subject knowledge demonstration
 `,
       system:
         "You are a professional viva examiner and report generator. Your evaluations are thorough, fair, and constructive. You provide detailed analysis based on actual performance.",
@@ -231,4 +243,37 @@ export async function getInterviewsByUserId(
     (a: Interview, b: Interview) =>
       new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
+}
+
+export async function toggleBookmark(
+  interviewId: string,
+  userId: string
+): Promise<{ success: boolean; bookmarked?: boolean }> {
+  try {
+    const interviewRef = db.collection("interviews").doc(interviewId);
+    const interviewDoc = await interviewRef.get();
+
+    if (!interviewDoc.exists) {
+      return { success: false };
+    }
+
+    const interviewData = interviewDoc.data();
+
+    // Verify the interview belongs to the user
+    if (interviewData?.userId !== userId) {
+      return { success: false };
+    }
+
+    const currentBookmarkStatus = interviewData?.bookmarked || false;
+    const newBookmarkStatus = !currentBookmarkStatus;
+
+    await interviewRef.update({
+      bookmarked: newBookmarkStatus,
+    });
+
+    return { success: true, bookmarked: newBookmarkStatus };
+  } catch (error) {
+    console.error("Error toggling bookmark:", error);
+    return { success: false };
+  }
 }

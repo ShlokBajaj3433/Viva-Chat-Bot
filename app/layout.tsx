@@ -1,6 +1,7 @@
 import { Toaster } from "sonner";
 import type { Metadata, Viewport } from "next";
 import { Mona_Sans } from "next/font/google";
+import "./globals.css";
 
 const monaSans = Mona_Sans({
   variable: "--font-mona-sans",
