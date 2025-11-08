@@ -129,3 +129,18 @@ interface InterviewFormProps {
 interface TechIconProps {
   techStack: string[];
 }
+
+interface ProjectFeedback {
+  id?: string;
+  name: string;
+  email?: string;
+  rating: number;
+  category: string;
+  experience: string;
+  improvements?: string;
+  features?: string;
+  recommend: string;
+  comments?: string;
+  submittedAt: string;
+  status: string;
+}

@@ -47,26 +47,27 @@ const ContactPage = () => {
     {
       icon: Mail,
       title: "Email Us",
-      content: "support@vivachat.com",
+      content: "info@mituniversity.edu.in",
       description: "Send us an email anytime",
     },
     {
       icon: Phone,
       title: "Call Us",
-      content: "+1 (555) 123-4567",
-      description: "Mon-Fri from 8am to 6pm",
+      content: "+91 20 3051 8000",
+      description: "Mon-Fri from 9am to 6pm IST",
     },
     {
       icon: MapPin,
       title: "Visit Us",
-      content: "123 Education Street, Learning City, LC 12345",
-      description: "Come say hello at our office",
+      content:
+        "MIT ADT University, Rajbaug, Loni Kalbhor, Pune, Maharashtra 412201",
+      description: "Come visit our campus",
     },
     {
       icon: Clock,
       title: "Working Hours",
-      content: "Monday - Friday: 8:00 AM - 6:00 PM",
-      description: "Weekend support available",
+      content: "Monday - Friday: 9:00 AM - 6:00 PM IST",
+      description: "Saturday: 9:00 AM - 1:00 PM",
     },
   ];
 

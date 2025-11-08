@@ -44,9 +44,9 @@ const AboutPage = () => {
 
   const stats = [
     { number: "10,000+", label: "Students Helped" },
-    { number: "50+", label: "Subjects Covered" },
+    { number: "43+", label: "Subjects Covered" },
     { number: "95%", label: "Success Rate" },
-    { number: "24/7", label: "Support Available" },
+    { number: "AI-Powered", label: "Interview Practice" },
   ];
 
   return (
@@ -55,6 +55,13 @@ const AboutPage = () => {
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="text-center">
+            <div className="mb-4">
+              <p className="text-blue-600 font-semibold text-lg">Powered by</p>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">
+                MIT ADT University
+              </h2>
+              <p className="text-gray-600">Pune, Maharashtra, India</p>
+            </div>
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
               About <span className="text-blue-600">VivaChat</span>
             </h1>
@@ -84,6 +91,14 @@ const AboutPage = () => {
               <h2 className="text-3xl font-bold text-gray-900 mb-6">
                 Our Mission
               </h2>
+              <div className="bg-blue-50 border-l-4 border-blue-600 p-4 mb-6">
+                <p className="text-sm font-semibold text-blue-900">
+                  Developed at MIT ADT University, Pune
+                </p>
+                <p className="text-xs text-blue-700">
+                  A leading institution in technology and innovation
+                </p>
+              </div>
               <p className="text-lg text-gray-600 mb-6">
                 We believe that every student deserves access to quality
                 practice opportunities that prepare them for real-world academic
@@ -92,8 +107,9 @@ const AboutPage = () => {
               </p>
               <p className="text-lg text-gray-600 mb-8">
                 By combining cutting-edge artificial intelligence with
-                educational best practices, we create an environment where
-                students can practice, learn, and grow at their own pace.
+                educational best practices from MIT ADT University, we create an
+                environment where students can practice, learn, and grow at
+                their own pace.
               </p>
               <Link href="/features">
                 <Button size="lg">Explore Features</Button>

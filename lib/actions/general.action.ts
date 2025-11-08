@@ -277,3 +277,41 @@ export async function toggleBookmark(
     return { success: false };
   }
 }
+
+export async function submitProjectFeedback(params: {
+  name: string;
+  email?: string;
+  rating: number;
+  category: string;
+  experience: string;
+  improvements?: string;
+  features?: string;
+  recommend: string;
+  comments?: string;
+}): Promise<{ success: boolean; message?: string }> {
+  try {
+    const feedbackData = {
+      ...params,
+      submittedAt: new Date().toISOString(),
+      status: "new", // For admin review
+    };
+
+    // Add to Firestore 'projectFeedback' collection
+    const feedbackRef = await db
+      .collection("projectFeedback")
+      .add(feedbackData);
+
+    console.log("Feedback submitted successfully:", feedbackRef.id);
+
+    return {
+      success: true,
+      message: "Thank you for your feedback! We appreciate your input.",
+    };
+  } catch (error) {
+    console.error("Error submitting feedback:", error);
+    return {
+      success: false,
+      message: "Failed to submit feedback. Please try again later.",
+    };
+  }
+}
