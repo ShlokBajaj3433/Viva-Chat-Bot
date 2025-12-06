@@ -1,3 +1,9 @@
+interface ReferenceLink {
+  title: string;
+  url: string;
+  source: string;
+}
+
 interface Feedback {
   id: string;
   interviewId: string;
@@ -20,6 +26,7 @@ interface Feedback {
     evaluation: string;
     marksAwarded: number;
     maxMarks: number;
+    referenceLinks: ReferenceLink[];
   }>;
   performanceSummary?: {
     totalMarks: number;

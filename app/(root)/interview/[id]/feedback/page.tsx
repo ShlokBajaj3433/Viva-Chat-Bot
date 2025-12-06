@@ -238,7 +238,7 @@ const Feedback = async ({ params }: RouteParams) => {
                         </p>
                         <div className="flex flex-wrap gap-2">
                           {q.referenceLinks.map(
-                            (link: any, linkIndex: number) => (
+                            (link: ReferenceLink, linkIndex: number) => (
                               <a
                                 key={linkIndex}
                                 href={link.url}

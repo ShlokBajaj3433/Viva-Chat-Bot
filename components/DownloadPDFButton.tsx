@@ -259,7 +259,7 @@ export default function DownloadPDFButton({
 
           doc.setFont("helvetica", "normal");
           doc.setTextColor(59, 130, 246);
-          qEval.referenceLinks.forEach((link: any) => {
+          qEval.referenceLinks.forEach((link: ReferenceLink) => {
             checkPageBreak(8);
             const linkText = `• ${cleanText(link.title || link.source)}: ${
               link.url
