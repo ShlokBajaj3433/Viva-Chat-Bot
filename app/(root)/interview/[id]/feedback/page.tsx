@@ -230,6 +230,42 @@ const Feedback = async ({ params }: RouteParams) => {
                       </p>
                       <p className="text-gray-800">{q.evaluation}</p>
                     </div>
+                    {q.referenceLinks && q.referenceLinks.length > 0 && (
+                      <div className="mt-4 pt-4 border-t border-gray-200">
+                        <p className="text-sm font-medium text-gray-600 mb-2 flex items-center gap-2">
+                          <span className="text-lg">📚</span>
+                          Learn More:
+                        </p>
+                        <div className="flex flex-wrap gap-2">
+                          {q.referenceLinks.map(
+                            (link: any, linkIndex: number) => (
+                              <a
+                                key={linkIndex}
+                                href={link.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-blue-700 hover:text-blue-900 rounded-lg text-sm font-medium transition-colors border border-blue-200"
+                              >
+                                <span>{link.title}</span>
+                                <svg
+                                  className="w-3 h-3"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  viewBox="0 0 24 24"
+                                >
+                                  <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                                  />
+                                </svg>
+                              </a>
+                            )
+                          )}
+                        </div>
+                      </div>
+                    )}
                   </div>
                 )
               )}

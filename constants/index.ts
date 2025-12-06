@@ -172,6 +172,13 @@ export const feedbackSchema = z.object({
       evaluation: z.string(),
       marksAwarded: z.number(),
       maxMarks: z.number(),
+      referenceLinks: z.array(
+        z.object({
+          title: z.string(),
+          url: z.string(),
+          source: z.string(), // e.g., "GeeksforGeeks", "TutorialsPoint", "MDN", etc.
+        })
+      ),
     })
   ),
 

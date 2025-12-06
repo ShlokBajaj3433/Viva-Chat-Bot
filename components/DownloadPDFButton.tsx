@@ -247,7 +247,31 @@ export default function DownloadPDFButton({
           pageWidth - 50
         );
         doc.text(evalText, 25, yPosition);
-        yPosition += evalText.length * 4 + 10;
+        yPosition += evalText.length * 4 + 5;
+
+        // Reference Links
+        if (qEval.referenceLinks && qEval.referenceLinks.length > 0) {
+          checkPageBreak(15);
+          doc.setFont("helvetica", "bold");
+          doc.setTextColor(37, 99, 235);
+          doc.text("Learn More:", 25, yPosition);
+          yPosition += 5;
+
+          doc.setFont("helvetica", "normal");
+          doc.setTextColor(59, 130, 246);
+          qEval.referenceLinks.forEach((link: any) => {
+            checkPageBreak(8);
+            const linkText = `• ${cleanText(link.title || link.source)}: ${
+              link.url
+            }`;
+            const text = doc.splitTextToSize(linkText, pageWidth - 55);
+            doc.text(text, 30, yPosition);
+            yPosition += text.length * 4 + 2;
+          });
+          yPosition += 5;
+        } else {
+          yPosition += 5;
+        }
       });
     }
 
