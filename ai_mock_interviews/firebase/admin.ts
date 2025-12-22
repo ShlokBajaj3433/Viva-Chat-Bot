@@ -1,18 +1,27 @@
 import { initializeApp, getApps, cert } from "firebase-admin/app";
 import { getAuth } from "firebase-admin/auth";
 import { getFirestore } from "firebase-admin/firestore";
-import * as path from "path";
 
 // Initialize Firebase Admin SDK
 function initFirebaseAdmin() {
   const apps = getApps();
 
   if (!apps.length) {
-    // Use service account file
-    const serviceAccountPath = path.join(process.cwd(), "firebase-service-account.json");
-    
+    // Use environment variables instead of JSON file
+    const privateKey = process.env.FIREBASE_PRIVATE_KEY
+      ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n')
+      : undefined;
+
+    if (!process.env.FIREBASE_PROJECT_ID || !process.env.FIREBASE_CLIENT_EMAIL || !privateKey) {
+      throw new Error("Missing required Firebase environment variables: FIREBASE_PROJECT_ID, FIREBASE_CLIENT_EMAIL, or FIREBASE_PRIVATE_KEY");
+    }
+
     initializeApp({
-      credential: cert(serviceAccountPath),
+      credential: cert({
+        projectId: process.env.FIREBASE_PROJECT_ID,
+        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+        privateKey: privateKey,
+      }),
     });
   }
 
