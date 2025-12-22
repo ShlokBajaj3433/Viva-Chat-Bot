@@ -1,0 +1,107 @@
+{
+  "name": "Viva chat",
+  "nodes": [
+    {
+      "name": "introduction",
+      "type": "conversation",
+      "isStart": true,
+      "metadata": { "position": { "x": -400, "y": -100 } },
+      "prompt": "You are a friendly viva assistant.",
+      "messagePlan": {
+        "firstMessage": "Hey there! I'm your viva practice assistant. Can I know your name?"
+      },
+      "variableExtractionPlan": {
+        "output": [
+          { "type": "string", "title": "studentName", "description": "The student's name" }
+        ]
+      }
+    },
+    {
+      "name": "Gathering Information",
+      "type": "conversation",
+      "metadata": { "position": { "x": -400, "y": 200 } },
+      "prompt": "",
+      "variableExtractionPlan": {
+        "output": [
+          { "type": "string", "title": "subject", "description": "What subject are you preparing for?" },
+          { "type": "string", "title": "year", "description": "Which year/semester are you in?" },
+          { "type": "string", "title": "topics", "description": "Any specific topics to cover?" },
+          { "type": "string", "title": "type", "description": "Do you want Technical, Conceptual, or Mixed questions?" },
+          { "type": "string", "title": "amount", "description": "How many questions do you want to practice?" },
+          { "type": "string", "title": "difficultyLevel", "description": "Should your viva be Easy, Normal, or Hard?" }
+        ]
+      },
+      "messagePlan": {
+        "firstMessage": "Great, let’s set up your viva. Tell me your subject, year, and topics you want to practice."
+      }
+    },
+    {
+      "name": "Confirmation",
+      "type": "conversation",
+      "metadata": { "position": { "x": -400, "y": 450 } },
+      "prompt": "",
+      "messagePlan": {
+        "firstMessage": "Okay {{studentName}}, you want {{amount}} {{difficultyLevel}} {{type}} questions from {{subject}}, {{year}}, covering {{topics}}. Is that correct?"
+      }
+    },
+    {
+      "name": "apiRequest_generateQuestions",
+      "type": "tool",
+      "metadata": { "position": { "x": -400, "y": 700 } },
+      "tool": {
+        "url": "https://viva-chat-bot.vercel.app/api/vapi/generate",
+        "type": "apiRequest",
+        "method": "POST",
+        "function": {
+          "name": "api_request_tool",
+          "parameters": { "type": "object", "required": [], "properties": {} },
+          "description": "API request tool"
+        },
+        "messages": [{ "type": "request-start", "blocking": false }],
+        "variableExtractionPlan": {
+          "schema": {
+            "type": "object",
+            "required": [],
+            "properties": {
+              "subject": { "type": "string" },
+              "year": { "type": "string" },
+              "topics": { "type": "string" },
+              "type": { "type": "string" },
+              "amount": { "type": "string" },
+              "difficultyLevel": { "type": "string" }
+            }
+          },
+          "aliases": []
+        }
+      }
+    },
+    {
+      "name": "QuestionsReady",
+      "type": "conversation",
+      "metadata": { "position": { "x": -400, "y": 950 } },
+      "prompt": "The viva questions have been generated.",
+      "messagePlan": {
+        "firstMessage": "Your viva questions are ready, {{studentName}}! Let’s start practicing now."
+      }
+    },
+    {
+      "name": "hangup",
+      "type": "tool",
+      "metadata": { "position": { "x": -400, "y": 1200 } },
+      "tool": {
+        "type": "endCall"
+      },
+      "messagePlan": {
+        "firstMessage": "Good luck for your viva, {{studentName}}! Keep practicing and you’ll do great."
+      }
+    }
+  ],
+  "edges": [
+    { "from": "introduction", "to": "Gathering Information" },
+    { "from": "Gathering Information", "to": "Confirmation" },
+    { "from": "Confirmation", "to": "apiRequest_generateQuestions" },
+    { "from": "apiRequest_generateQuestions", "to": "QuestionsReady" },
+    { "from": "QuestionsReady", "to": "hangup" }
+  ],
+  "globalPrompt": ""
+}

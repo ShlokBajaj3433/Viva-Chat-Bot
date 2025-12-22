@@ -1,0 +1,294 @@
+{
+  "name": "Viva chat (Skip Pre-configured Questions)",
+  "variables": [
+    {
+      "name": "username",
+      "type": "string",
+      "description": "User's name from the app"
+    },
+    {
+      "name": "userid",
+      "type": "string",
+      "description": "User ID from the app"
+    },
+    {
+      "name": "configInstructions",
+      "type": "string",
+      "description": "Instructions about pre-configured data to skip asking"
+    },
+    {
+      "name": "subject",
+      "type": "string",
+      "description": "Pre-configured subject (optional)"
+    },
+    {
+      "name": "year",
+      "type": "string",
+      "description": "Pre-configured year (optional)"
+    },
+    {
+      "name": "topics",
+      "type": "string",
+      "description": "Pre-configured topics (optional)"
+    },
+    {
+      "name": "type",
+      "type": "string",
+      "description": "Pre-configured interview type (optional)"
+    },
+    {
+      "name": "isTechnical",
+      "type": "boolean",
+      "description": "Whether to prefer technical questions (optional)"
+    }
+  ],
+  "nodes": [
+    {
+      "name": "checkPreconfig",
+      "type": "conversation",
+      "isStart": true,
+      "metadata": {
+        "position": {
+          "x": -400,
+          "y": -100
+        }
+      },
+      "prompt": "You are a friendly viva examiner. Greet the student warmly and check if you already have their name.\n\n{{configInstructions}}\n\nIf you have the username variable, greet them by name. If not, ask for their name politely.",
+      "variableExtractionPlan": {
+        "output": [
+          {
+            "type": "string",
+            "title": "studentName",
+            "description": "The student's name"
+          }
+        ]
+      },
+      "messagePlan": {
+        "firstMessage": "Hello! I'm your viva examiner today. What's your name?"
+      }
+    },
+    {
+      "name": "conditionalGatherInfo",
+      "type": "conversation",
+      "metadata": {
+        "position": {
+          "x": -400,
+          "y": 200
+        }
+      },
+      "prompt": "{{configInstructions}}\n\nCheck which information is already provided:\n- If subject={{subject}} has a value, don't ask about subject\n- If year={{year}} has a value, don't ask about year\n- If topics={{topics}} has a value, don't ask about topics\n- If type={{type}} has a value, don't ask about type\n\nOnly ask for information that is missing. Be natural and conversational.",
+      "variableExtractionPlan": {
+        "output": [
+          {
+            "type": "string",
+            "title": "finalSubject",
+            "description": "Subject (use existing value if available)"
+          },
+          {
+            "type": "string",
+            "title": "finalYear",
+            "description": "Year/semester (use existing value if available)"
+          },
+          {
+            "type": "string",
+            "title": "finalTopics",
+            "description": "Topics (use existing value if available)"
+          },
+          {
+            "type": "string",
+            "title": "finalType",
+            "description": "Interview type (use existing value if available)"
+          },
+          {
+            "type": "string",
+            "title": "amount",
+            "description": "Number of questions"
+          },
+          {
+            "type": "string",
+            "title": "difficultyLevel",
+            "description": "Difficulty level"
+          }
+        ]
+      },
+      "messagePlan": {
+        "firstMessage": "Great! Now, what subject would you like to be examined on today?"
+      }
+    },
+    {
+      "name": "Confirmation",
+      "type": "conversation",
+      "metadata": {
+        "position": {
+          "x": -400,
+          "y": 450
+        }
+      },
+      "prompt": "Confirm all the interview details with the student. Explain that this is a viva examination where YOU ask questions and THEY answer. You will NOT provide answers. Make sure they understand this is an examination, not a teaching session.",
+      "messagePlan": {
+        "firstMessage": "Let me confirm: I'll conduct a viva examination with you. I'll ask the questions, and you'll provide the answers. I won't be giving you the answers - this is a real examination to test your knowledge. Are you ready to begin?"
+      }
+    },
+    {
+      "name": "apiRequest_generateQuestions",
+      "type": "tool",
+      "metadata": {
+        "position": {
+          "x": -400,
+          "y": 700
+        }
+      },
+      "tool": {
+        "url": "https://viva-chat-bot.vercel.app/api/vapi/generate",
+        "type": "apiRequest",
+        "method": "POST",
+        "function": {
+          "name": "api_request_tool",
+          "parameters": {
+            "type": "object",
+            "required": ["userid"],
+            "properties": {
+              "userid": {
+                "type": "string",
+                "description": "User ID"
+              },
+              "subject": {
+                "type": "string",
+                "description": "Subject/Course"
+              },
+              "year": {
+                "type": "string",
+                "description": "Year/Semester"
+              },
+              "topics": {
+                "type": "string",
+                "description": "Topics to cover"
+              },
+              "type": {
+                "type": "string",
+                "description": "Interview type"
+              },
+              "amount": {
+                "type": "number",
+                "description": "Number of questions"
+              },
+              "isTechnical": {
+                "type": "boolean",
+                "description": "Technical preference"
+              }
+            }
+          },
+          "description": "Generate interview questions"
+        },
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "Generating your personalized questions...",
+            "blocking": true
+          },
+          {
+            "type": "request-complete",
+            "content": "Questions generated successfully!"
+          },
+          {
+            "type": "request-failed",
+            "content": "Sorry, I couldn't generate questions. Let's try again."
+          }
+        ],
+        "variableExtractionPlan": {
+          "schema": {
+            "type": "object",
+            "required": [],
+            "properties": {
+              "userid": {
+                "type": "string",
+                "value": "{{userid}}"
+              },
+              "subject": {
+                "type": "string",
+                "value": "{{finalSubject}}"
+              },
+              "year": {
+                "type": "string",
+                "value": "{{finalYear}}"
+              },
+              "topics": {
+                "type": "string",
+                "value": "{{finalTopics}}"
+              },
+              "type": {
+                "type": "string",
+                "value": "{{finalType}}"
+              },
+              "amount": {
+                "type": "number",
+                "value": "{{amount}}"
+              },
+              "isTechnical": {
+                "type": "boolean",
+                "value": "{{isTechnical}}"
+              }
+            }
+          },
+          "aliases": []
+        }
+      }
+    },
+    {
+      "name": "QuestionsReady",
+      "type": "conversation",
+      "metadata": {
+        "position": {
+          "x": -400,
+          "y": 950
+        }
+      },
+      "prompt": "You are now the viva examiner. The questions have been generated. Your job is to:\n\n1. Ask ONE question at a time\n2. WAIT and LISTEN to the student's complete answer\n3. If the answer is incomplete or unclear, ask follow-up questions to probe deeper\n4. NEVER provide the correct answer - let them think and answer\n5. If they're really stuck, give tiny hints only\n6. After they answer, move to the next question\n7. Be professional, fair, and encouraging\n\nREMEMBER: This is an EXAMINATION. You test, you don't teach. Don't give away answers.",
+      "messagePlan": {
+        "firstMessage": "Alright, let's begin your viva examination. I'll ask you questions one at a time. Take your time to think and answer carefully. Here's your first question."
+      }
+    },
+    {
+      "name": "hangup",
+      "type": "tool",
+      "metadata": {
+        "position": {
+          "x": -400,
+          "y": 1200
+        }
+      },
+      "tool": {
+        "type": "endCall",
+        "messages": [
+          {
+            "type": "request-start",
+            "content": "Great job today! Your performance report will be ready shortly. Good luck!"
+          }
+        ]
+      }
+    }
+  ],
+  "edges": [
+    {
+      "from": "checkPreconfig",
+      "to": "conditionalGatherInfo"
+    },
+    {
+      "from": "conditionalGatherInfo",
+      "to": "Confirmation"
+    },
+    {
+      "from": "Confirmation",
+      "to": "apiRequest_generateQuestions"
+    },
+    {
+      "from": "apiRequest_generateQuestions",
+      "to": "QuestionsReady"
+    },
+    {
+      "from": "QuestionsReady",
+      "to": "hangup"
+    }
+  ],
+  "globalPrompt": "You are a professional viva/interview examiner. Your role is to ASK questions and LISTEN to the student's answers.\n\n⚠️ CRITICAL RULES:\n1. ASK the question and WAIT for the student to answer\n2. DO NOT provide answers or explanations after asking a question\n3. DO NOT tell them what the correct answer is\n4. Listen carefully to their response\n5. If their answer is incomplete, ask follow-up questions to probe deeper\n6. If they struggle, give hints but NEVER the full answer\n7. Move to the next question after they finish answering\n8. Be encouraging but maintain examiner professionalism\n9. At the end, thank them and let them know their performance report will be generated\n\nThis is a VIVA EXAMINATION - you are testing their knowledge, not teaching them."
+}
