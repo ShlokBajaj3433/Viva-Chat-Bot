@@ -146,3 +146,65 @@ interface ProjectFeedback {
   submittedAt: string;
   status: string;
 }
+
+// ============= CLASSROOM & ASSIGNMENT TYPES =============
+
+interface Classroom {
+  id: string;
+  name: string;
+  code: string; // Unique 6-character code for joining
+  subject: string;
+  description?: string;
+  instructorId: string;
+  instructorName: string;
+  studentIds: string[];
+  createdAt: string;
+  updatedAt: string;
+  status: "active" | "archived";
+  color?: string; // For card background (hex or tailwind class)
+  section?: string;
+  room?: string;
+}
+
+interface ClassroomAssignment {
+  id: string;
+  classroomId: string;
+  title: string;
+  description?: string;
+  subject: string;
+  dueDate: string; // ISO 8601 format
+  createdAt: string;
+  updatedAt: string;
+  status: "active" | "inactive" | "closed";
+  assignmentType: "viva" | "quiz" | "project";
+  vivaConfig?: {
+    role: string;
+    level: string;
+    techStack: string[];
+    questionCount?: number;
+    duration?: number; // in minutes
+  };
+}
+
+interface StudentAssignmentProgress {
+  id: string;
+  studentId: string;
+  assignmentId: string;
+  classroomId: string;
+  status: "not_started" | "in_progress" | "submitted";
+  interviewId?: string;
+  feedbackId?: string;
+  score?: number;
+  feedback?: any;
+  startedAt?: string;
+  submittedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface ClassroomEnrollment {
+  studentId: string;
+  classroomId: string;
+  enrolledAt: string;
+  status: "active" | "inactive";
+}

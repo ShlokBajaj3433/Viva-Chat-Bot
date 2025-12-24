@@ -76,3 +76,6 @@ google-credentials.json
 # Preserve example env files in repo; ignore actual .env files above
 .env.example
 .env.local.example
+
+# Project documentation (internal use)
+Project Info Documents/

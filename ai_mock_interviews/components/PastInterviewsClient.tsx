@@ -359,62 +359,6 @@ export default function PastInterviewsClient({
         </div>
       </section>
 
-      {/* Performance Insights */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 bg-white border-t">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Your Performance Insights
-            </h2>
-            <p className="text-lg text-gray-600">
-              Track your progress and identify areas for improvement
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div className="bg-gradient-to-r from-green-50 to-green-100 p-6 rounded-lg">
-              <div className="flex items-center mb-4">
-                <TrendingUp className="w-8 h-8 text-green-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Trending Up
-                </h3>
-              </div>
-              <p className="text-2xl font-bold text-green-600 mb-1">+18%</p>
-              <p className="text-sm text-gray-600">
-                Average improvement over last month
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-r from-blue-50 to-blue-100 p-6 rounded-lg">
-              <div className="flex items-center mb-4">
-                <Star className="w-8 h-8 text-blue-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Best Subject
-                </h3>
-              </div>
-              <p className="text-lg font-bold text-blue-600 mb-1">
-                {uniqueSubjects[0] || "N/A"}
-              </p>
-              <p className="text-sm text-gray-600">
-                Consistently high performance
-              </p>
-            </div>
-
-            <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 p-6 rounded-lg">
-              <div className="flex items-center mb-4">
-                <Bookmark className="w-8 h-8 text-yellow-600 mr-3" />
-                <h3 className="text-lg font-semibold text-gray-900">
-                  Focus Area
-                </h3>
-              </div>
-              <p className="text-lg font-bold text-yellow-600 mb-1">
-                {uniqueSubjects[uniqueSubjects.length - 1] || "N/A"}
-              </p>
-              <p className="text-sm text-gray-600">Needs more practice</p>
-            </div>
-          </div>
-        </div>
-      </section>
     </div>
   );
 }
