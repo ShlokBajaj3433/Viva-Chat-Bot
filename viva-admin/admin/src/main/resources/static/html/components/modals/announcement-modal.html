@@ -1,0 +1,38 @@
+<!-- Announcement Modal Component -->
+<div id="announcement-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="announcement-modal-title">Add Announcement</h3>
+            <button class="modal-close" onclick="closeModal('announcement')">&times;</button>
+        </div>
+        <form id="announcement-form">
+            <div class="modal-body">
+                <input type="hidden" id="announcement-id">
+                <div class="form-group">
+                    <label for="announcement-title">Title *</label>
+                    <input type="text" id="announcement-title" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="announcement-content">Content *</label>
+                    <textarea id="announcement-content" class="form-control" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="announcement-author">Author ID *</label>
+                    <input type="text" id="announcement-author" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="announcement-target">Target Audience</label>
+                    <select id="announcement-target" class="form-control">
+                        <option value="ALL">All</option>
+                        <option value="TEACHERS">Teachers Only</option>
+                        <option value="STUDENTS">Students Only</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('announcement')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Announcement</button>
+            </div>
+        </form>
+    </div>
+</div>

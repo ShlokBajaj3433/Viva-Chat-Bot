@@ -9,10 +9,10 @@ import Footer from "@/components/Footer";
 const LayoutClient = ({ children }: { children: ReactNode }) => {
   const pathname = usePathname();
 
-  // Check if current path is an interview detail page (not feedback or other pages)
-  // Match /interview/[id] but NOT /interview/[id]/feedback or /interview (without id)
+  // Check if current path is an interview page (with or without id)
+  // Match /interview or /interview/[id] but NOT /interview/[id]/feedback
   const isInterviewPage = pathname
-    ? /^\/interview\/[^/]+$/.test(pathname)
+    ? /^\/interview(\/[^/]+)?$/.test(pathname)
     : false;
 
   // Scroll to top and prevent scrolling on interview pages

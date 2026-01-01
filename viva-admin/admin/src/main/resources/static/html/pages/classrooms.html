@@ -1,0 +1,41 @@
+<!-- Classrooms Page -->
+<div class="content">
+    <div class="panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-chalkboard"></i> Classrooms Management</h3>
+            <button class="btn btn-primary" onclick="openModal('classroom')">
+                <i class="fas fa-plus"></i> Add Classroom
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="search-box">
+                <input type="text" class="form-control" id="search-classrooms" placeholder="Search classrooms by name or subject...">
+                <button class="btn" onclick="loadClassrooms()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Subject</th>
+                            <th>Teacher</th>
+                            <th>Students</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="classrooms-table">
+                        <tr>
+                            <td colspan="6" class="loading">
+                                <div class="loading-spinner"></div>
+                                Loading classrooms...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

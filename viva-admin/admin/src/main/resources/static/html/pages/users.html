@@ -1,0 +1,51 @@
+<!-- Users Page -->
+<div class="content">
+    <div class="panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-users"></i> Users Management</h3>
+            <div class="header-actions">
+                <button class="btn btn-success" onclick="openBulkUploadModal()">
+                    <i class="fas fa-file-excel"></i> Bulk Upload Students
+                </button>
+                <button class="btn btn-primary" onclick="openModal('user')">
+                    <i class="fas fa-plus"></i> Add User
+                </button>
+            </div>
+        </div>
+        <div class="panel-body">
+            <div class="search-box">
+                <input type="text" class="form-control" id="search-users" placeholder="Search users by name or email...">
+                <select class="form-control" id="filter-role" style="width: 150px;" onchange="filterUsersByRole()">
+                    <option value="">All Roles</option>
+                    <option value="ADMIN">Admin</option>
+                    <option value="TEACHER">Teacher</option>
+                    <option value="STUDENT">Student</option>
+                </select>
+                <button class="btn" onclick="loadUsers()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table">
+                        <tr>
+                            <td colspan="5" class="loading">
+                                <div class="loading-spinner"></div>
+                                Loading users...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

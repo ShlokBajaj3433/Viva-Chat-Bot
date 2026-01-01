@@ -1,0 +1,39 @@
+<!-- Classroom Modal Component -->
+<div id="classroom-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="classroom-modal-title">Add Classroom</h3>
+            <button class="modal-close" onclick="closeModal('classroom')">&times;</button>
+        </div>
+        <form id="classroom-form">
+            <div class="modal-body">
+                <input type="hidden" id="classroom-id">
+                <div class="form-group">
+                    <label for="classroom-name">Classroom Name *</label>
+                    <input type="text" id="classroom-name" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="classroom-subject">Subject *</label>
+                    <input type="text" id="classroom-subject" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="classroom-description">Description</label>
+                    <textarea id="classroom-description" class="form-control"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="classroom-teacher">Teacher *</label>
+                    <select id="classroom-teacher" class="form-control" required>
+                        <option value="">Loading teachers...</option>
+                    </select>
+                    <small style="color: #666; margin-top: 5px; display: block;">
+                        Your ID: <span id="current-user-id" style="font-weight: bold; color: #333;"></span>
+                    </small>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('classroom')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Classroom</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -119,10 +119,13 @@ const Agent = ({
   const [messages, setMessages] = useState<SavedMessage[]>([]);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastMessage, setLastMessage] = useState<string>("");
-  const [showConfigForm, setShowConfigForm] = useState(true);
+  const [showConfigForm, setShowConfigForm] = useState(false);
   const [interviewConfig, setInterviewConfig] = useState<InterviewConfig>({});
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
   const hasRedirectedRef = useRef(false); // Track if we've already redirected
+  const [elapsedTime, setElapsedTime] = useState(0); // Timer in seconds
+  const [interviewStartTime, setInterviewStartTime] = useState<number | null>(null);
+  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   console.log(
     "Agent Component Rendered - Type:",
@@ -150,6 +153,14 @@ const Agent = ({
     const onCallStart = () => {
       console.log("📞 VAPI call started");
       setCallStatus(CallStatus.ACTIVE);
+      // Start timer
+      const startTime = Date.now();
+      setInterviewStartTime(startTime);
+      setElapsedTime(0);
+      
+      timerIntervalRef.current = setInterval(() => {
+        setElapsedTime(Math.floor((Date.now() - startTime) / 1000));
+      }, 1000);
     };
 
     const onCallEnd = () => {
@@ -158,6 +169,11 @@ const Agent = ({
       console.log("   - InterviewId:", interviewId);
       console.log("   - Messages count:", messages.length);
       setCallStatus(CallStatus.FINISHED);
+      // Stop timer
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+        timerIntervalRef.current = null;
+      }
     };
 
     const onMessage = (message: Message) => {
@@ -214,6 +230,11 @@ const Agent = ({
       vapi.off("call-start-progress", onCallStartProgress);
       vapi.off("call-start-failed", onCallStartFailed);
       vapi.off("call-start-success", onCallStartSuccess);
+      
+      // Cleanup timer
+      if (timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
     };
   }, []);
 
@@ -267,6 +288,7 @@ const Agent = ({
             userId: userId!,
             transcript: messages,
             feedbackId,
+            duration: elapsedTime, // Pass interview duration
           });
 
           console.log(
@@ -666,6 +688,21 @@ const Agent = ({
                 ●
               </span>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Timer Display */}
+      {callStatus === CallStatus.ACTIVE && (
+        <div className="fixed top-4 right-4 z-40">
+          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3">
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <span className="font-mono text-lg font-bold">
+              {Math.floor(elapsedTime / 60).toString().padStart(2, '0')}:
+              {(elapsedTime % 60).toString().padStart(2, '0')}
+            </span>
           </div>
         </div>
       )}

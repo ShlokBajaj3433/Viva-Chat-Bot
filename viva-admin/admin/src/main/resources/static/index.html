@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="VIVA Admin Panel - Teacher and Administrator Portal">
+    <title>VIVA Admin Panel</title>
+    
+    <!-- CSS - Main entry point imports all modules -->
+    <link rel="stylesheet" href="css/main.css">
+    
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <!-- Login Page -->
+    <div id="login-page" class="login-container">
+        <div id="login-content">
+            <!-- Loaded from html/pages/login.html -->
+            <div class="login-box">
+                <div class="loading">
+                    <div class="loading-spinner"></div>
+                    <p>Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Container -->
+    <div id="dashboard-page" class="container" style="display: none;">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar-container">
+            <!-- Loaded from html/components/sidebar.html -->
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header" id="header-container">
+                <!-- Loaded from html/components/header.html -->
+            </header>
+
+            <!-- Page Sections Container -->
+            <div id="sections-container">
+                <!-- Sections loaded dynamically from html/pages/*.html -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Modals Container -->
+    <div id="modals-container">
+        <!-- Modals loaded from html/components/modals/*.html -->
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <!-- JavaScript Modules -->
+    <!-- Core modules first -->
+    <script src="js/config.js?v=20260101001000"></script>
+    <script src="js/rbac.js?v=20260101001000"></script>
+    <script src="js/api.js?v=20260101001000"></script>
+    <script src="js/auth.js?v=20260101001000"></script>
+    <script src="js/ui.js?v=20260101001000"></script>
+    <script src="js/navigation.js?v=20260101001000"></script>
+    
+    <!-- Page modules -->
+    <script src="js/pages/dashboard.js?v=20260101001000"></script>
+    <script src="js/pages/users.js?v=20260101001000"></script>
+    <script src="js/pages/classrooms.js?v=20260101001000"></script>
+    <script src="js/pages/assignments.js?v=20260101001000"></script>
+    <script src="js/pages/announcements.js?v=20260101001000"></script>
+    <script src="js/pages/settings.js?v=20260101001000"></script>
+    
+    <!-- Main app -->
+    <script src="js/app.js?v=20260101001000"></script>
+    
+    <!-- HTML Loader - must be last, handles initialization -->
+    <script src="js/html-loader.js?v=20260101001000"></script>
+</body>
+</html>

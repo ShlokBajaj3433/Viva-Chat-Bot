@@ -49,7 +49,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`${monaSans.className} antialiased`}>
+      <body className={`${monaSans.className} antialiased`} suppressHydrationWarning>
         <div className="min-h-screen bg-white">{children}</div>
         <Toaster />
       </body>

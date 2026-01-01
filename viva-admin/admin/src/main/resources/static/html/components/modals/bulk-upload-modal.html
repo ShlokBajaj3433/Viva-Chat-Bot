@@ -1,0 +1,143 @@
+<!-- Bulk Student Upload Modal -->
+<div class="modal-overlay" id="modal-bulk-upload">
+    <div class="modal" style="max-width: 700px;">
+        <div class="modal-header">
+            <h3><i class="fas fa-file-excel"></i> Bulk Upload Students</h3>
+            <button class="close-btn" onclick="closeModal('bulk-upload')">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <!-- Step 1: Instructions and Template Download -->
+            <div id="upload-step-1">
+                <div class="upload-instructions">
+                    <h4><i class="fas fa-info-circle"></i> Instructions</h4>
+                    <ol>
+                        <li>Download the Excel template below</li>
+                        <li>Fill in student details (<strong>Name, Email, and Roll Number are required</strong>)</li>
+                        <li>Upload the filled Excel file</li>
+                        <li>Download the credentials file to share with students</li>
+                    </ol>
+                    <div class="info-box">
+                        <i class="fas fa-shield-alt"></i>
+                        <span>Secure passwords will be auto-generated for each student. Students must change their password on first login.</span>
+                    </div>
+                </div>
+
+                <div class="template-download">
+                    <button class="btn btn-secondary" onclick="downloadTemplate()">
+                        <i class="fas fa-download"></i> Download Excel Template
+                    </button>
+                </div>
+
+                <div class="upload-section">
+                    <h4><i class="fas fa-upload"></i> Upload Student List</h4>
+                    
+                    <!-- Classroom Selection -->
+                    <div class="form-group">
+                        <label>Assign to Classroom</label>
+                        <div class="classroom-options">
+                            <div class="radio-group">
+                                <label class="radio-option">
+                                    <input type="radio" name="classroom-option" value="none" checked onchange="toggleClassroomOption()">
+                                    <span>No Classroom</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="classroom-option" value="existing" onchange="toggleClassroomOption()">
+                                    <span>Existing Classroom</span>
+                                </label>
+                                <label class="radio-option">
+                                    <input type="radio" name="classroom-option" value="new" onchange="toggleClassroomOption()">
+                                    <span>Create New Classroom</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Existing Classroom Dropdown -->
+                    <div class="form-group" id="existing-classroom-group" style="display: none;">
+                        <label>Select Classroom</label>
+                        <select class="form-control" id="bulk-upload-classroom">
+                            <option value="">-- Select Classroom --</option>
+                        </select>
+                    </div>
+                    
+                    <!-- New Classroom Fields -->
+                    <div id="new-classroom-group" style="display: none;">
+                        <div class="form-group">
+                            <label>Classroom Name *</label>
+                            <input type="text" class="form-control" id="new-classroom-name" placeholder="e.g., Class 10-A">
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label>Subject</label>
+                                <input type="text" class="form-control" id="new-classroom-subject" placeholder="e.g., Mathematics">
+                            </div>
+                            <div class="form-group">
+                                <label>Grade/Section</label>
+                                <input type="text" class="form-control" id="new-classroom-grade" placeholder="e.g., 10th Grade">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label>Description</label>
+                            <textarea class="form-control" id="new-classroom-description" rows="2" placeholder="Optional description"></textarea>
+                        </div>
+                    </div>
+                    
+                    <div class="file-upload-area" id="file-upload-area">
+                        <input type="file" id="student-file" accept=".xlsx,.xls" hidden onchange="handleFileSelect(this)">
+                        <div class="upload-placeholder" onclick="document.getElementById('student-file').click()">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <p>Click to select or drag & drop Excel file</p>
+                            <span class="file-types">Supported: .xlsx, .xls</span>
+                        </div>
+                        <div class="selected-file" id="selected-file" style="display: none;">
+                            <i class="fas fa-file-excel"></i>
+                            <span id="selected-file-name"></span>
+                            <button class="btn btn-sm" onclick="clearSelectedFile()">
+                                <i class="fas fa-times"></i>
+                            </button>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary btn-block" id="btn-upload-students" onclick="uploadStudents()" disabled>
+                        <i class="fas fa-upload"></i> Upload Students
+                    </button>
+                </div>
+            </div>
+
+            <!-- Step 2: Processing -->
+            <div id="upload-step-2" style="display: none;">
+                <div class="processing-indicator">
+                    <div class="loading-spinner large"></div>
+                    <h4>Processing Students...</h4>
+                    <p>Please wait while we create student accounts</p>
+                </div>
+            </div>
+
+            <!-- Step 3: Results -->
+            <div id="upload-step-3" style="display: none;">
+                <div class="upload-results">
+                    <div class="result-summary" id="result-summary">
+                        <!-- Will be populated dynamically -->
+                    </div>
+                    
+                    <div class="result-details" id="result-details">
+                        <!-- Will show failed students in table format -->
+                    </div>
+
+                    <div class="result-actions">
+                        <button class="btn btn-success" id="btn-download-credentials" onclick="downloadCredentials()" style="display: none;">
+                            <i class="fas fa-download"></i> Download Credentials File
+                        </button>
+                        <button class="btn btn-secondary" onclick="resetBulkUpload()">
+                            <i class="fas fa-redo"></i> Upload More
+                        </button>
+                        <button class="btn btn-primary" onclick="closeModal('bulk-upload'); loadUsers();">
+                            <i class="fas fa-check"></i> Done
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,101 @@
+<!-- Dashboard Page -->
+<div class="content">
+    <!-- Welcome Banner -->
+    <div class="welcome-banner">
+        <h2>Welcome to VIVA Admin Panel</h2>
+        <p>Manage your classrooms, assignments, and announcements from one place.</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+        <div class="stat-card">
+            <h3>Total Users</h3>
+            <div class="value" id="stat-users">0</div>
+            <div class="change">
+                <i class="fas fa-users"></i> Teachers & Admins
+            </div>
+        </div>
+        <div class="stat-card">
+            <h3>Classrooms</h3>
+            <div class="value" id="stat-classrooms">0</div>
+            <div class="change">
+                <i class="fas fa-chalkboard"></i> Active Classes
+            </div>
+        </div>
+        <div class="stat-card">
+            <h3>Assignments</h3>
+            <div class="value" id="stat-assignments">0</div>
+            <div class="change">
+                <i class="fas fa-tasks"></i> Total Tasks
+            </div>
+        </div>
+        <div class="stat-card">
+            <h3>Announcements</h3>
+            <div class="value" id="stat-announcements">0</div>
+            <div class="change">
+                <i class="fas fa-bullhorn"></i> Posted
+            </div>
+        </div>
+    </div>
+
+    <!-- Panels Row -->
+    <div class="grid-2">
+        <!-- Recent Activity -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+            </div>
+            <div class="panel-body">
+                <div id="recent-activity">
+                    <p class="empty-state">No recent activity</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="panel">
+            <div class="panel-header">
+                <h3><i class="fas fa-server"></i> System Status</h3>
+            </div>
+            <div class="panel-body">
+                <table class="system-status">
+                    <tr>
+                        <td>Firebase Connection</td>
+                        <td><span class="badge badge-info" id="firebase-status">Checking...</span></td>
+                    </tr>
+                    <tr>
+                        <td>API Status</td>
+                        <td><span class="badge badge-success" id="api-status">Connected</span></td>
+                    </tr>
+                    <tr>
+                        <td>Last Updated</td>
+                        <td id="last-updated">-</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+        </div>
+        <div class="panel-body">
+            <div class="quick-actions">
+                <button class="btn btn-primary" onclick="switchSection('users'); setTimeout(() => openModal('user'), 100);">
+                    <i class="fas fa-user-plus"></i> Add User
+                </button>
+                <button class="btn btn-primary" onclick="switchSection('classrooms'); setTimeout(() => openModal('classroom'), 100);">
+                    <i class="fas fa-plus"></i> Create Classroom
+                </button>
+                <button class="btn btn-primary" onclick="switchSection('assignments'); setTimeout(() => openModal('assignment'), 100);">
+                    <i class="fas fa-tasks"></i> New Assignment
+                </button>
+                <button class="btn btn-primary" onclick="switchSection('announcements'); setTimeout(() => openModal('announcement'), 100);">
+                    <i class="fas fa-bullhorn"></i> Post Announcement
+                </button>
+            </div>
+        </div>
+    </div>
+</div>

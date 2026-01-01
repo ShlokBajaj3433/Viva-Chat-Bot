@@ -11,6 +11,7 @@ interface Feedback {
   areasForImprovement: string[];
   finalAssessment: string;
   createdAt: string;
+  duration?: number; // Duration in seconds
   // New comprehensive structure fields
   studentInfo?: any;
   questionEvaluations?: Array<{
@@ -61,12 +62,19 @@ interface CreateFeedbackParams {
   userId: string;
   transcript: { role: string; content: string }[];
   feedbackId?: string;
+  duration?: number; // Duration in seconds
 }
 
 interface User {
-  name: string;
+  uid?: string;
+  id?: string;
+  displayName?: string;
+  name?: string;
   email: string;
-  id: string;
+  role?: string | string[];
+  emailVerified?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 }
 
 interface InterviewCardProps {
@@ -106,13 +114,11 @@ interface GetLatestInterviewsParams {
 }
 
 interface SignInParams {
-  email: string;
   idToken: string;
 }
 
 interface SignUpParams {
-  uid: string;
-  name: string;
+  displayName: string;
   email: string;
   password: string;
 }

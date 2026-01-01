@@ -1,0 +1,43 @@
+<!-- Assignment Modal Component -->
+<div id="assignment-modal" class="modal-overlay">
+    <div class="modal">
+        <div class="modal-header">
+            <h3 id="assignment-modal-title">Add Assignment</h3>
+            <button class="modal-close" onclick="closeModal('assignment')">&times;</button>
+        </div>
+        <form id="assignment-form">
+            <div class="modal-body">
+                <input type="hidden" id="assignment-id">
+                <div class="form-group">
+                    <label for="assignment-title">Title *</label>
+                    <input type="text" id="assignment-title" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-description">Description</label>
+                    <textarea id="assignment-description" class="form-control"></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-classroom">Classroom ID *</label>
+                    <input type="text" id="assignment-classroom" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-duedate">Due Date *</label>
+                    <input type="datetime-local" id="assignment-duedate" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="assignment-type">Type *</label>
+                    <select id="assignment-type" class="form-control" required>
+                        <option value="QUIZ">Quiz</option>
+                        <option value="HOMEWORK">Homework</option>
+                        <option value="PROJECT">Project</option>
+                        <option value="EXAM">Exam</option>
+                    </select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn" onclick="closeModal('assignment')">Cancel</button>
+                <button type="submit" class="btn btn-primary">Save Assignment</button>
+            </div>
+        </form>
+    </div>
+</div>

@@ -7,7 +7,7 @@ import { db } from "@/firebase/admin";
 import { feedbackSchema } from "@/constants";
 
 export async function createFeedback(params: CreateFeedbackParams) {
-  const { interviewId, userId, transcript, feedbackId } = params;
+  const { interviewId, userId, transcript, feedbackId, duration } = params;
 
   try {
     // Get interview details for context
@@ -174,6 +174,7 @@ Provide:
     const feedback = {
       interviewId: interviewId,
       userId: userId,
+      duration: duration || 0, // Duration in seconds
 
       // New comprehensive structure
       studentInfo: object.studentInfo,

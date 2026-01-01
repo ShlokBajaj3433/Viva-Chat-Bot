@@ -147,29 +147,6 @@ export default function StudentDashboardClient() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-gray-200">
-        <div className="max-w-7xl mx-auto px-6 py-6">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-4xl font-bold text-gray-900">
-                Welcome, {user?.name?.split(" ")[0]}! 👋
-              </h1>
-              <p className="text-gray-600 mt-1">
-                Track your classroom progress and viva interviews in one place
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              className="text-gray-700 hover:text-red-600"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Sign Out
-            </Button>
-          </div>
-        </div>
-      </div>
-
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8 pb-32">
         {/* Quick Stats */}

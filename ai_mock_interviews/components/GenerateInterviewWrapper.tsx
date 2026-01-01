@@ -17,6 +17,30 @@ const GenerateInterviewWrapper = ({
   const [interviewId, setInterviewId] = useState<string | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [interviewData, setInterviewData] = useState<any>(null);
+
+  // Load prefilled interview data on component mount
+  useEffect(() => {
+    const prefilledData = sessionStorage.getItem("prefilledInterview");
+    if (prefilledData) {
+      try {
+        const config = JSON.parse(prefilledData);
+        setInterviewData({
+          role: config.subject || "General Interview",
+          type: config.type || "Quick Practice",
+          level: config.year || "All Levels",
+          techstack: config.topics ? config.topics.split(", ") : [],
+          subject: config.subject || "General",
+          year: config.year || "All Years",
+          topics: config.topics || "General Topics",
+          isTechnical: config.isTechnical || false,
+        });
+        console.log("✅ Loaded interview config:", config);
+      } catch (parseError) {
+        console.error("Error parsing prefilled interview data:", parseError);
+      }
+    }
+  }, []);
 
   const createInterview = async () => {
     if (!userId) {
@@ -30,8 +54,8 @@ const GenerateInterviewWrapper = ({
     try {
       console.log("🔄 Creating interview record in database...");
 
-      // Check for prefilled interview data
-      let interviewData: any = {
+      // Use the interview data that was already loaded on mount
+      let interview = interviewData || {
         role: "General Interview",
         type: "Quick Practice",
         level: "All Levels",
@@ -43,28 +67,11 @@ const GenerateInterviewWrapper = ({
         topics: "General Topics",
       };
 
-      const prefilledData = sessionStorage.getItem("prefilledInterview");
-      if (prefilledData) {
-        try {
-          const config = JSON.parse(prefilledData);
-          // Use prefilled data to create interview with correct subject
-          interviewData = {
-            role: config.subject || "General Interview",
-            type: config.type || "Quick Practice",
-            level: config.year || "All Levels",
-            techstack: config.topics ? config.topics.split(", ") : [],
-            amount: 5,
-            userid: userId,
-            subject: config.subject || "General",
-            year: config.year || "All Years",
-            topics: config.topics || "General Topics",
-            isTechnical: config.isTechnical || false,
-          };
-          console.log("✅ Using prefilled interview data:", interviewData);
-        } catch (parseError) {
-          console.error("Error parsing prefilled interview data:", parseError);
-        }
-      }
+      // Ensure interview has userid
+      interview.userid = userId;
+      interview.amount = 5;
+
+      console.log("📋 Creating interview with data:", interview);
 
       // Create interview record
       const response = await fetch("/api/vapi/generate", {
@@ -72,7 +79,7 @@ const GenerateInterviewWrapper = ({
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(interviewData),
+        body: JSON.stringify(interview),
       });
 
       const data = await response.json();
@@ -90,7 +97,8 @@ const GenerateInterviewWrapper = ({
           const latestData = await latestInterviewResponse.json();
           if (latestData.interviewId) {
             console.log("✅ Got interview ID:", latestData.interviewId);
-            setInterviewId(latestData.interviewId);
+            // Redirect to the interview page
+            router.push(`/interview/${latestData.interviewId}`);
           }
         }
       } else {
@@ -122,21 +130,42 @@ const GenerateInterviewWrapper = ({
 
   if (!interviewId) {
     return (
-      <div className="text-center py-12">
-        <div className="bg-white rounded-2xl shadow-xl p-8 inline-block">
-          <h2 className="text-2xl font-bold mb-4">Start Your Interview</h2>
-          <p className="text-gray-600 mb-6">
+      <div className="h-screen w-screen flex items-center justify-center fixed inset-0">
+        <div className="bg-white rounded-2xl shadow-xl p-8 max-w-2xl w-full mx-4">
+          <h2 className="text-3xl font-bold mb-6 text-gray-900 text-center">Start Your Interview</h2>
+          
+          {/* Interview Info Section */}
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 mb-8 text-center">
+            <p className="text-sm text-gray-700 mb-2">
+              <strong className="text-blue-900">Subject:</strong> {interviewData?.role || "General Interview"}
+            </p>
+            <p className="text-sm text-gray-700 mb-2">
+              <strong className="text-blue-900">Level:</strong> {interviewData?.level || "All Levels"}
+            </p>
+            <p className="text-sm text-gray-700">
+              <strong className="text-blue-900">Topics:</strong> {interviewData?.techstack?.length > 0 ? interviewData.techstack.join(", ") : "General Topics"}
+            </p>
+          </div>
+
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
+            <p className="text-sm text-amber-900">
+              💡 <strong>Tip:</strong> Find a quiet place, ensure good lighting, and test your microphone before starting.
+            </p>
+          </div>
+
+          <p className="text-gray-600 mb-8 font-medium text-center">
             Click below to begin your personalized interview session
           </p>
+          <div className="flex justify-center">
           <button
             onClick={createInterview}
             disabled={isCreating}
-            className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl hover:from-blue-700 hover:to-indigo-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+            className="group relative inline-flex items-center justify-center px-10 py-4 text-lg font-bold text-white transition-all duration-300 ease-out rounded-2xl shadow-xl hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:from-blue-700 hover:via-indigo-700 hover:to-purple-700 transform hover:scale-105"
           >
             {isCreating ? (
-              <span className="flex items-center gap-2">
+              <span className="flex items-center gap-3">
                 <svg
-                  className="animate-spin h-5 w-5"
+                  className="animate-spin h-6 w-6"
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
                   viewBox="0 0 24 24"
@@ -155,12 +184,16 @@ const GenerateInterviewWrapper = ({
                     d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
                   ></path>
                 </svg>
-                Creating Interview...
+                <span>Creating Interview...</span>
               </span>
             ) : (
-              "🎤 Start Interview"
+              <span className="flex items-center gap-3">
+                <span className="text-2xl">🎤</span>
+                <span>Start Interview</span>
+              </span>
             )}
           </button>
+          </div>
         </div>
       </div>
     );

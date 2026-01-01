@@ -17,14 +17,14 @@ import {
 import { Form } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 
-import { signIn, signUp } from "@/lib/actions/auth.action";
+import { signIn, signUp, setSessionCookie } from "@/lib/actions/auth.action";
 import FormField from "./FormField";
 
 const authFormSchema = (type: FormType) => {
   return z.object({
-    name: type === "sign-up" ? z.string().min(3) : z.string().optional(),
-    email: z.string().email(),
-    password: z.string().min(3),
+    displayName: type === "sign-up" ? z.string().min(3, "Name must be at least 3 characters") : z.string().optional(),
+    email: z.string().email("Invalid email address"),
+    password: z.string().min(6, "Password must be at least 6 characters"),
   });
 };
 
@@ -35,7 +35,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
+      displayName: "",
       email: "",
       password: "",
     },
@@ -44,17 +44,17 @@ const AuthForm = ({ type }: { type: FormType }) => {
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
     try {
       if (type === "sign-up") {
-        const { name, email, password } = data;
+        const { displayName, email, password } = data;
 
-        const userCredential = await createUserWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        // Create user with Firebase Auth
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
 
+        // Update user profile
+        await userCredential.user.getIdToken();
+
+        // Call server action to save user to Firestore
         const result = await signUp({
-          uid: userCredential.user.uid,
-          name: name!,
+          displayName: displayName!,
           email,
           password,
         });
@@ -69,29 +69,42 @@ const AuthForm = ({ type }: { type: FormType }) => {
       } else {
         const { email, password } = data;
 
-        const userCredential = await signInWithEmailAndPassword(
-          auth,
-          email,
-          password
-        );
+        // Sign in with Firebase Auth
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
 
+        // Get ID token
         const idToken = await userCredential.user.getIdToken();
-        if (!idToken) {
-          toast.error("Sign in Failed. Please try again.");
-          return;
-        }
 
-        await signIn({
-          email,
+        // Call server action to create session
+        const result = await signIn({
           idToken,
         });
+
+        if (!result.success) {
+          toast.error(result.message);
+          return;
+        }
 
         toast.success("Signed in successfully.");
         router.push("/");
       }
-    } catch (error) {
+    } catch (error: any) {
       console.log(error);
-      toast.error(`There was an error: ${error}`);
+      
+      // Handle Firebase auth errors
+      if (error.code === "auth/email-already-in-use") {
+        toast.error("Email already in use. Please sign in.");
+      } else if (error.code === "auth/invalid-email") {
+        toast.error("Invalid email address.");
+      } else if (error.code === "auth/weak-password") {
+        toast.error("Password is too weak. Use at least 6 characters.");
+      } else if (error.code === "auth/user-not-found") {
+        toast.error("User not found. Please sign up.");
+      } else if (error.code === "auth/wrong-password") {
+        toast.error("Wrong password.");
+      } else {
+        toast.error(`Error: ${error.message}`);
+      }
     }
   };
 
@@ -115,7 +128,7 @@ const AuthForm = ({ type }: { type: FormType }) => {
             {!isSignIn && (
               <FormField
                 control={form.control}
-                name="name"
+                name="displayName"
                 label="Name"
                 placeholder="Your Name"
                 type="text"

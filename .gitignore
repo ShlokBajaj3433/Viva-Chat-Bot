@@ -1,0 +1,34 @@
+# Root level files to ignore
+node_modules/
+.DS_Store
+Thumbs.db
+
+# All environment variables
+.env
+.env.local
+.env.*.local
+
+# Firebase and credentials
+firebase-service-account.json
+*.serviceAccount.json
+firebase-debug.log
+google-credentials.json
+credentials.json
+
+# IDE
+.vscode/
+.idea/
+
+# Project info (internal documentation)
+Project Info Documents/
+
+# Backend specific
+viva-admin/admin/src/main/resources/application.properties
+viva-admin/admin/src/main/resources/application-*.properties
+viva-admin/admin/build/
+viva-admin/admin/.gradle/
+
+# Frontend specific (will be in subfolder .gitignore too)
+ai_mock_interviews/node_modules/
+ai_mock_interviews/.next/
+ai_mock_interviews/.env.local
