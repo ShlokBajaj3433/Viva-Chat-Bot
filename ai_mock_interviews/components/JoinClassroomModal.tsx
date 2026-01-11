@@ -26,17 +26,12 @@ export default function JoinClassroomModal({
     setError("");
 
     if (!classCode.trim()) {
-      setError("Please enter a classroom code");
-      return;
-    }
-
-    if (classCode.trim().length !== 6) {
-      setError("Classroom code must be 6 characters");
+      setError("Please enter a classroom ID");
       return;
     }
 
     try {
-      await onJoin(classCode.trim().toUpperCase());
+      await onJoin(classCode.trim());
       setClassCode("");
       onClose();
       toast.success("Successfully joined classroom!");
@@ -65,13 +60,13 @@ export default function JoinClassroomModal({
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <p className="text-sm text-gray-600">
-            Enter the classroom code provided by your instructor to join the class.
+            Enter the classroom ID provided by your instructor to join the class.
           </p>
 
-          {/* Code Input */}
+          {/* ID Input */}
           <div>
             <label htmlFor="classCode" className="block text-sm font-medium text-gray-700 mb-2">
-              Classroom Code
+              Classroom ID
             </label>
             <div className="relative">
               <Code className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
@@ -80,12 +75,11 @@ export default function JoinClassroomModal({
                 type="text"
                 value={classCode}
                 onChange={(e) => {
-                  setClassCode(e.target.value.toUpperCase());
+                  setClassCode(e.target.value);
                   setError("");
                 }}
-                placeholder="e.g., ABC123"
-                maxLength={6}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-lg font-mono tracking-widest"
+                placeholder="e.g., classroom-969154218437600"
+                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-mono"
                 disabled={isLoading}
               />
             </div>
@@ -100,10 +94,10 @@ export default function JoinClassroomModal({
           {/* Tips */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <p className="text-xs font-semibold text-blue-900 uppercase tracking-wider mb-2">
-              How to find your code:
+              How to find your classroom ID:
             </p>
             <ul className="text-xs text-blue-800 space-y-1">
-              <li>• Ask your instructor for the classroom code</li>
+              <li>• Ask your instructor for the classroom ID</li>
               <li>• Check your email or class materials</li>
               <li>• Contact your instructor if you don't have it</li>
             </ul>

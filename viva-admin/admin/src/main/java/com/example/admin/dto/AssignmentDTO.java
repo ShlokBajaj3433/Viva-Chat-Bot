@@ -12,6 +12,9 @@ public class AssignmentDTO {
     private String subject;
     private int totalPoints;
     private boolean published;
+    private String type; // QUIZ, HOMEWORK, PROJECT, EXAM, VIVA
+    private String status; // active, inactive, closed
+    private VivaConfig vivaConfig; // optional, only for VIVA
     private LocalDateTime createdAt;
     private LocalDateTime updatedAt;
 
@@ -99,6 +102,30 @@ public class AssignmentDTO {
         this.published = published;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public VivaConfig getVivaConfig() {
+        return vivaConfig;
+    }
+
+    public void setVivaConfig(VivaConfig vivaConfig) {
+        this.vivaConfig = vivaConfig;
+    }
+
     public LocalDateTime getCreatedAt() {
         return createdAt;
     }
@@ -113,5 +140,28 @@ public class AssignmentDTO {
 
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public static class VivaConfig {
+        private String role;
+        private String level;
+        private java.util.List<String> techStack;
+        private Integer questionCount;
+        private Integer duration; // minutes
+
+        public String getRole() { return role; }
+        public void setRole(String role) { this.role = role; }
+
+        public String getLevel() { return level; }
+        public void setLevel(String level) { this.level = level; }
+
+        public java.util.List<String> getTechStack() { return techStack; }
+        public void setTechStack(java.util.List<String> techStack) { this.techStack = techStack; }
+
+        public Integer getQuestionCount() { return questionCount; }
+        public void setQuestionCount(Integer questionCount) { this.questionCount = questionCount; }
+
+        public Integer getDuration() { return duration; }
+        public void setDuration(Integer duration) { this.duration = duration; }
     }
 }

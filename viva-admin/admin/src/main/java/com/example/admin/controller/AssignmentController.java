@@ -25,6 +25,12 @@ public class AssignmentController {
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
+    @GetMapping
+    public ResponseEntity<List<AssignmentDTO>> getAllAssignments() {
+        List<AssignmentDTO> assignments = assignmentService.getAllAssignments();
+        return ResponseEntity.ok(assignments);
+    }
+
     @GetMapping("/{id}")
     public ResponseEntity<AssignmentDTO> getAssignmentById(@PathVariable String id) {
         Optional<AssignmentDTO> assignment = assignmentService.getAssignmentById(id);

@@ -4,7 +4,6 @@ import com.example.admin.config.TestFirebaseConfig;
 import com.example.admin.controller.AnnouncementController;
 import com.example.admin.controller.AssignmentController;
 import com.example.admin.controller.ClassroomController;
-import com.example.admin.controller.UserController;
 import com.example.admin.service.AnnouncementService;
 import com.example.admin.service.AssignmentService;
 import com.example.admin.service.ClassroomService;
@@ -48,11 +47,6 @@ class VivaAdminPanelApplicationTests {
         @Bean
         public AnnouncementService announcementService() {
             return Mockito.mock(AnnouncementService.class);
-        }
-
-        @Bean
-        public UserController userController(UserService userService) {
-            return new UserController(userService);
         }
 
         @Bean

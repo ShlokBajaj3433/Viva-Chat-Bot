@@ -1,6 +1,7 @@
 package com.example.admin.controller;
 
 import com.example.admin.dto.ClassroomDTO;
+import com.example.admin.dto.JoinClassroomRequest;
 import com.example.admin.service.ClassroomService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,6 +31,23 @@ public class ClassroomController {
         Optional<ClassroomDTO> classroom = classroomService.getClassroomById(id);
         return classroom.map(ResponseEntity::ok)
                 .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    @GetMapping("/code/{code}")
+    public ResponseEntity<ClassroomDTO> getClassroomByCode(@PathVariable String code) {
+        Optional<ClassroomDTO> classroom = classroomService.getClassroomByCode(code);
+        return classroom.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.status(HttpStatus.NOT_FOUND).build());
+    }
+
+    @PostMapping("/join")
+    public ResponseEntity<ClassroomDTO> joinClassroomByCode(@RequestBody JoinClassroomRequest request) {
+        try {
+            ClassroomDTO classroom = classroomService.joinClassroomByCode(request.getCode(), request.getStudentId());
+            return ResponseEntity.ok(classroom);
+        } catch (IllegalArgumentException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(null);
+        }
     }
 
     @GetMapping("/teacher/{teacherId}")

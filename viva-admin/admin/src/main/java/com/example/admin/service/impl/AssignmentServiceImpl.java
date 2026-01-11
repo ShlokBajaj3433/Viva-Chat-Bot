@@ -44,6 +44,11 @@ public class AssignmentServiceImpl implements AssignmentService {
     }
 
     @Override
+    public List<AssignmentDTO> getAllAssignments() {
+        return assignmentRepository.findAll();
+    }
+
+    @Override
     public AssignmentDTO updateAssignment(String id, AssignmentDTO assignmentDTO) {
         AssignmentDTO existing = assignmentRepository.findById(id).orElse(null);
         if (existing == null) {

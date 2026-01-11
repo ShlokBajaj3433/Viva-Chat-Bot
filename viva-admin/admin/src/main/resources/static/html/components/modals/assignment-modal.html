@@ -27,11 +27,34 @@
                 <div class="form-group">
                     <label for="assignment-type">Type *</label>
                     <select id="assignment-type" class="form-control" required>
+                        <option value="VIVA">Viva</option>
                         <option value="QUIZ">Quiz</option>
                         <option value="HOMEWORK">Homework</option>
                         <option value="PROJECT">Project</option>
                         <option value="EXAM">Exam</option>
                     </select>
+                </div>
+                <div id="viva-config-fields" class="form-group-group" style="display:none">
+                    <div class="form-group">
+                        <label for="viva-role">Viva Role *</label>
+                        <input type="text" id="viva-role" class="form-control" placeholder="e.g., Software Engineer">
+                    </div>
+                    <div class="form-group">
+                        <label for="viva-level">Level *</label>
+                        <input type="text" id="viva-level" class="form-control" placeholder="e.g., Junior">
+                    </div>
+                    <div class="form-group">
+                        <label for="viva-techstack">Tech Stack (comma-separated)</label>
+                        <input type="text" id="viva-techstack" class="form-control" placeholder="e.g., Java, SQL, OOP">
+                    </div>
+                    <div class="form-group">
+                        <label for="viva-questioncount">Question Count</label>
+                        <input type="number" id="viva-questioncount" class="form-control" min="1" placeholder="10">
+                    </div>
+                    <div class="form-group">
+                        <label for="viva-duration">Duration (minutes)</label>
+                        <input type="number" id="viva-duration" class="form-control" min="5" placeholder="30">
+                    </div>
                 </div>
             </div>
             <div class="modal-footer">

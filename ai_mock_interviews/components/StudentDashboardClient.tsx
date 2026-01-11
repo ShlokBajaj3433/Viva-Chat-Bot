@@ -116,18 +116,79 @@ export default function StudentDashboardClient() {
   const handleStartViva = async (
     assignment: ClassroomAssignment & { classroomName: string }
   ) => {
+    console.log("🎤 START_VIVA: Assignment clicked", {
+      id: assignment.id,
+      title: assignment.title,
+      classroomId: assignment.classroomId,
+      hasVivaConfig: !!assignment.vivaConfig,
+      assignmentType: assignment.assignmentType,
+    });
+
     setSelectedAssignment(assignment);
-    // TODO: Open viva configuration modal or redirect to interview setup
-    // For now, navigate to the viva generation page
-    if (assignment.vivaConfig) {
+
+    try {
+      // Step 1: Prepare prefilled config for interview page from assignment
+      const prefilledConfig = {
+        subject: assignment.subject || assignment.title || "General Interview",
+        type: "assignment-viva",
+        isTechnical: true,
+        year: assignment.vivaConfig?.level || "All Levels",
+        topics: Array.isArray(assignment.vivaConfig?.techStack)
+          ? assignment.vivaConfig!.techStack.join(", ")
+          : "",
+        classroomId: assignment.classroomId,
+        assignmentId: assignment.id,
+        assignmentTitle: assignment.title,
+        role: assignment.vivaConfig?.role || "General",
+      } as any;
+
+      console.log("📝 Prefilled config prepared:", prefilledConfig);
+
+      // Step 2: Store config in sessionStorage for Interview page
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(
+          "prefilledInterview",
+          JSON.stringify(prefilledConfig)
+        );
+        console.log("✅ Config stored in sessionStorage");
+      }
+
+      // Step 3: Build navigation URL with assignment context
       const params = new URLSearchParams({
         classroom: assignment.classroomId,
         assignment: assignment.id,
-        role: assignment.vivaConfig.role,
-        level: assignment.vivaConfig.level,
-        techstack: assignment.vivaConfig.techStack?.join(",") || "",
+        source: "assignment",
+        role: assignment.vivaConfig?.role || "General",
+        level: assignment.vivaConfig?.level || "All Levels",
+        techstack: Array.isArray(assignment.vivaConfig?.techStack)
+          ? assignment.vivaConfig!.techStack.join(",")
+          : "",
       });
-      router.push(`/interview?${params.toString()}`);
+
+      const targetUrl = `/interview?${params.toString()}`;
+      console.log("🔗 Target URL:", targetUrl);
+
+      // Step 4: Show feedback to user
+      toast.loading("Starting viva...");
+
+      // Step 5: Navigate using Next.js router
+      console.log("📲 Calling router.push...");
+      router.push(targetUrl);
+
+      // Step 6: Fallback to hard refresh if router.push doesn't work
+      setTimeout(() => {
+        if (typeof window !== "undefined") {
+          if (window.location.pathname.startsWith("/interview")) {
+            console.log("✅ Navigation already on /interview, skipping fallback");
+            return;
+          }
+          console.log("⏱️ Hard navigation fallback triggered (700ms)");
+          window.location.assign(targetUrl);
+        }
+      }, 700);
+    } catch (error) {
+      console.error("❌ Error in handleStartViva:", error);
+      toast.error("Failed to start viva. Please try again.");
     }
   };
 

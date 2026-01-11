@@ -9,6 +9,8 @@ import com.example.admin.enums.UserRole;
 import com.example.admin.repository.ClassroomRepository;
 import com.example.admin.repository.UserRepository;
 import com.example.admin.service.BulkStudentService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserRecord;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,6 +30,7 @@ public class BulkStudentServiceImpl implements BulkStudentService {
 
     private final UserRepository userRepository;
     private final ClassroomRepository classroomRepository;
+    private final FirebaseAuth firebaseAuth;
     private final BCryptPasswordEncoder passwordEncoder;
     private final SecureRandom secureRandom;
     private final AtomicInteger counter;
@@ -36,9 +39,10 @@ public class BulkStudentServiceImpl implements BulkStudentService {
     private static final String PASSWORD_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789!@#$%";
     private static final int PASSWORD_LENGTH = 12;
 
-    public BulkStudentServiceImpl(UserRepository userRepository, ClassroomRepository classroomRepository) {
+    public BulkStudentServiceImpl(UserRepository userRepository, ClassroomRepository classroomRepository, FirebaseAuth firebaseAuth) {
         this.userRepository = userRepository;
         this.classroomRepository = classroomRepository;
+        this.firebaseAuth = firebaseAuth;
         this.passwordEncoder = new BCryptPasswordEncoder();
         this.secureRandom = new SecureRandom();
         this.counter = new AtomicInteger((int) (System.currentTimeMillis() % 10000));
@@ -115,7 +119,7 @@ public class BulkStudentServiceImpl implements BulkStudentService {
                     // Use roll number directly as student ID (Enrolment No)
                     String studentId = rollNumber.replaceAll("[^a-zA-Z0-9]", "");
 
-                    // Check if email already exists
+                    // Check if email already exists in Firestore
                     if (userRepository.findByEmail(email).isPresent()) {
                         failedStudents.add(new FailedStudent(rowNum + 1, email, name, "Email already exists"));
                         continue;
@@ -129,21 +133,45 @@ public class BulkStudentServiceImpl implements BulkStudentService {
                     String tempPassword = emailPrefix + "@" + last4Digits;
                     String hashedPassword = passwordEncoder.encode(tempPassword);
 
-                    // Create user DTO
+                    // Create user in Firebase Authentication first
+                    String firebaseUid;
+                    try {
+                        UserRecord.CreateRequest request = new UserRecord.CreateRequest()
+                            .setEmail(email)
+                            .setPassword(tempPassword)
+                            .setDisplayName(name)
+                            .setEmailVerified(false);
+                        
+                        UserRecord userRecord = firebaseAuth.createUser(request);
+                        firebaseUid = userRecord.getUid();
+                    } catch (Exception authError) {
+                        // If user already exists in Firebase Auth, try to get their UID
+                        try {
+                            UserRecord existingUser = firebaseAuth.getUserByEmail(email);
+                            failedStudents.add(new FailedStudent(rowNum + 1, email, name, "Email already exists in Firebase Authentication"));
+                            continue;
+                        } catch (Exception e2) {
+                            throw new RuntimeException("Failed to create Firebase Auth user: " + authError.getMessage(), authError);
+                        }
+                    }
+
+                    // Create user DTO with Firebase UID
                     UserDTO student = new UserDTO();
-                    student.setUid(studentId);
+                    student.setUid(firebaseUid);  // Use Firebase Auth UID
                     student.setEmail(email);
                     student.setDisplayName(name);
                     student.setRole(UserRole.STUDENT);
+                    student.setEnrollmentNumber(rollNumber);  // Store enrollment number
+                    student.setRollNumber(rollNumber);  // Store roll number
                     student.setCreatedAt(LocalDateTime.now());
                     student.setUpdatedAt(LocalDateTime.now());
 
-                    // Save to repository with hashed password
+                    // Save to Firestore repository with hashed password
                     userRepository.saveWithPassword(student, hashedPassword);
 
                     // Add to success list with plain password for credential sheet
                     StudentCredential credential = new StudentCredential(
-                        studentId,
+                        firebaseUid,  // Use Firebase UID
                         email,
                         name,
                         rollNumber.isEmpty() ? studentId : rollNumber,

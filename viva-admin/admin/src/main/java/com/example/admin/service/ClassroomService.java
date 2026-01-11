@@ -7,6 +7,8 @@ import java.util.Optional;
 public interface ClassroomService {
     ClassroomDTO createClassroom(ClassroomDTO classroomDTO);
     Optional<ClassroomDTO> getClassroomById(String id);
+    Optional<ClassroomDTO> getClassroomByCode(String code);
+    ClassroomDTO joinClassroomByCode(String code, String studentId);
     List<ClassroomDTO> getClassroomsByTeacherId(String teacherId);
     List<ClassroomDTO> getAllClassrooms();
     ClassroomDTO updateClassroom(String id, ClassroomDTO classroomDTO);

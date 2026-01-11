@@ -1,16 +1,5 @@
 # VIVA Admin & Teacher Portal Guide
 
-## Table of Contents
-1. [Overview](#overview)
-2. [System Architecture](#system-architecture)
-3. [Admin Portal Guide](#admin-portal-guide)
-4. [Teacher Portal Guide](#teacher-portal-guide)
-5. [User Management](#user-management)
-6. [Classroom Management](#classroom-management)
-7. [Assignment Management](#assignment-management)
-8. [Bulk Operations](#bulk-operations)
-9. [API Endpoints Reference](#api-endpoints-reference)
-10. [Troubleshooting](#troubleshooting)
 
 ---
 

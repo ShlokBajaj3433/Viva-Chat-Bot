@@ -4,6 +4,9 @@ import com.example.admin.dto.UserDTO;
 import com.example.admin.enums.UserRole;
 import com.example.admin.repository.UserRepository;
 import com.example.admin.service.UserService;
+import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.auth.UserRecord;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -14,9 +17,13 @@ import java.util.Optional;
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
+    private final FirebaseAuth firebaseAuth;
+    private final BCryptPasswordEncoder passwordEncoder;
 
-    public UserServiceImpl(UserRepository userRepository) {
+    public UserServiceImpl(UserRepository userRepository, FirebaseAuth firebaseAuth) {
         this.userRepository = userRepository;
+        this.firebaseAuth = firebaseAuth;
+        this.passwordEncoder = new BCryptPasswordEncoder();
     }
 
     @Override
@@ -27,6 +34,46 @@ public class UserServiceImpl implements UserService {
         userDTO.setCreatedAt(Optional.ofNullable(userDTO.getCreatedAt()).orElse(LocalDateTime.now()));
         userDTO.setUpdatedAt(LocalDateTime.now());
         return userRepository.save(userDTO);
+    }
+
+    @Override
+    public UserDTO createUserWithPassword(UserDTO userDTO, String password) {
+        try {
+            // Check if user already exists
+            if (userRepository.findByEmail(userDTO.getEmail()).isPresent()) {
+                throw new IllegalArgumentException("Email already exists: " + userDTO.getEmail());
+            }
+
+            // For STUDENT role, create in Firebase Auth
+            if (userDTO.getRole() == UserRole.STUDENT) {
+                try {
+                    UserRecord.CreateRequest request = new UserRecord.CreateRequest()
+                        .setEmail(userDTO.getEmail())
+                        .setPassword(password)
+                        .setDisplayName(userDTO.getDisplayName())
+                        .setEmailVerified(false);
+                    
+                    UserRecord userRecord = firebaseAuth.createUser(request);
+                    userDTO.setUid(userRecord.getUid());  // Use Firebase UID
+                } catch (Exception authError) {
+                    throw new RuntimeException("Failed to create Firebase Auth user: " + authError.getMessage(), authError);
+                }
+            } else {
+                // For non-student roles, generate UID
+                if (userDTO.getUid() == null || userDTO.getUid().isBlank()) {
+                    userDTO.setUid("user-" + System.nanoTime());
+                }
+            }
+
+            // Hash password and save to Firestore
+            String hashedPassword = passwordEncoder.encode(password);
+            userDTO.setCreatedAt(Optional.ofNullable(userDTO.getCreatedAt()).orElse(LocalDateTime.now()));
+            userDTO.setUpdatedAt(LocalDateTime.now());
+            
+            return userRepository.saveWithPassword(userDTO, hashedPassword);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to create user with password: " + e.getMessage(), e);
+        }
     }
 
     @Override

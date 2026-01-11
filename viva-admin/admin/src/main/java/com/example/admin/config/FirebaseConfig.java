@@ -3,8 +3,10 @@ package com.example.admin.config;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.firebase.FirebaseApp;
 import com.google.firebase.FirebaseOptions;
+import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.cloud.FirestoreClient;
 import com.google.cloud.firestore.Firestore;
+import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
@@ -18,6 +20,31 @@ import java.util.List;
 @Configuration
 @Profile("!test")
 public class FirebaseConfig {
+
+    static {
+        // Load .env file at startup
+        try {
+            Dotenv dotenv = Dotenv.configure()
+                    .ignoreIfMissing()
+                    .load();
+            
+            // Get specific variables we need
+            String projectId = dotenv.get("FIREBASE_PROJECT_ID");
+            String clientEmail = dotenv.get("FIREBASE_CLIENT_EMAIL");
+            String privateKey = dotenv.get("FIREBASE_PRIVATE_KEY");
+            String jwtSecret = dotenv.get("JWT_SECRET");
+            String jwtHours = dotenv.get("JWT_EXPIRATION_HOURS");
+            
+            // Set system properties for all dotenv variables
+            if (projectId != null) System.setProperty("FIREBASE_PROJECT_ID", projectId);
+            if (clientEmail != null) System.setProperty("FIREBASE_CLIENT_EMAIL", clientEmail);
+            if (privateKey != null) System.setProperty("FIREBASE_PRIVATE_KEY", privateKey);
+            if (jwtSecret != null) System.setProperty("JWT_SECRET", jwtSecret);
+            if (jwtHours != null) System.setProperty("JWT_EXPIRATION_HOURS", jwtHours);
+        } catch (Exception e) {
+            System.out.println("Warning: Could not load .env file, falling back to environment variables: " + e.getMessage());
+        }
+    }
 
     @Bean
     public FirebaseApp firebaseApp() {
@@ -86,6 +113,11 @@ public class FirebaseConfig {
         return FirestoreClient.getFirestore(app);
     }
 
+    @Bean
+    public FirebaseAuth firebaseAuth(FirebaseApp app) {
+        return FirebaseAuth.getInstance(app);
+    }
+
     private static String getEnv(String key) {
         String value = System.getenv(key);
         if (value == null) {
@@ -101,3 +133,5 @@ public class FirebaseConfig {
                 .replace("\n", "\\n");
     }
 }
+
+

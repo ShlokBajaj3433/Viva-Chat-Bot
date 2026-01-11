@@ -16,6 +16,10 @@ public class UserDTO {
     private LocalDateTime updatedAt;
     private String passwordHash;  // For manual password management
     private boolean mustChangePassword;  // Flag to force password change on first login
+    
+    // Student-specific fields
+    private String enrollmentNumber;  // Unique enrollment number for students
+    private String rollNumber;  // Roll number for students
 
     public UserDTO() {
     }
@@ -149,5 +153,21 @@ public class UserDTO {
 
     public void setMustChangePassword(boolean mustChangePassword) {
         this.mustChangePassword = mustChangePassword;
+    }
+
+    public String getEnrollmentNumber() {
+        return enrollmentNumber;
+    }
+
+    public void setEnrollmentNumber(String enrollmentNumber) {
+        this.enrollmentNumber = enrollmentNumber;
+    }
+
+    public String getRollNumber() {
+        return rollNumber;
+    }
+
+    public void setRollNumber(String rollNumber) {
+        this.rollNumber = rollNumber;
     }
 }

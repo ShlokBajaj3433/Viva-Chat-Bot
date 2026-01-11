@@ -21,24 +21,46 @@ const GenerateInterviewWrapper = ({
 
   // Load prefilled interview data on component mount
   useEffect(() => {
+    console.log("📦 GenerateInterviewWrapper mounted - checking sessionStorage...");
+    if (typeof window !== "undefined") {
+      console.log("🌐 Current location:", window.location.href);
+    }
     const prefilledData = sessionStorage.getItem("prefilledInterview");
+    
     if (prefilledData) {
       try {
         const config = JSON.parse(prefilledData);
-        setInterviewData({
-          role: config.subject || "General Interview",
-          type: config.type || "Quick Practice",
+        console.log("📋 Found prefilled config in sessionStorage:", config);
+        
+        // Parse topics into array if needed
+        const topicsArray = config.topics 
+          ? typeof config.topics === "string"
+            ? config.topics.split(", ").filter(Boolean)
+            : Array.isArray(config.topics) ? config.topics : []
+          : [];
+
+        const preparedData = {
+          role: config.role || config.subject || "General Interview",
+          type: config.type || "assignment-viva",
           level: config.year || "All Levels",
-          techstack: config.topics ? config.topics.split(", ") : [],
+          techstack: topicsArray,
           subject: config.subject || "General",
           year: config.year || "All Years",
           topics: config.topics || "General Topics",
-          isTechnical: config.isTechnical || false,
-        });
-        console.log("✅ Loaded interview config:", config);
+          isTechnical: config.isTechnical !== false, // Default true for assignments
+          classroomId: config.classroomId,
+          assignmentId: config.assignmentId,
+          assignmentTitle: config.assignmentTitle,
+        };
+
+        console.log("✅ Prepared interview data:", preparedData);
+        setInterviewData(preparedData);
       } catch (parseError) {
-        console.error("Error parsing prefilled interview data:", parseError);
+        console.error("❌ Error parsing prefilled interview data:", parseError);
+        setError("Failed to load assignment config. Using defaults.");
       }
+    } else {
+      console.log("ℹ️ No prefilled config found - will use defaults");
     }
   }, []);
 
@@ -52,9 +74,9 @@ const GenerateInterviewWrapper = ({
     setError(null);
 
     try {
-      console.log("🔄 Creating interview record in database...");
+      console.log("🔄 CREATE_INTERVIEW: Starting interview creation...");
 
-      // Use the interview data that was already loaded on mount
+      // Use the interview data that was already loaded from assignment
       let interview = interviewData || {
         role: "General Interview",
         type: "Quick Practice",
@@ -67,13 +89,22 @@ const GenerateInterviewWrapper = ({
         topics: "General Topics",
       };
 
-      // Ensure interview has userid
+      // Ensure interview has userid and defaults
       interview.userid = userId;
-      interview.amount = 5;
+      interview.amount = interview.amount || 5;
 
-      console.log("📋 Creating interview with data:", interview);
+      // Log interview context
+      if (interview.classroomId && interview.assignmentId) {
+        console.log("📚 Assignment Context:", {
+          classroomId: interview.classroomId,
+          assignmentId: interview.assignmentId,
+          assignmentTitle: interview.assignmentTitle,
+        });
+      }
 
-      // Create interview record
+      console.log("📋 Interview payload:", interview);
+
+      // Create interview record via API
       const response = await fetch("/api/vapi/generate", {
         method: "POST",
         headers: {
@@ -83,12 +114,14 @@ const GenerateInterviewWrapper = ({
       });
 
       const data = await response.json();
+      console.log("📡 API Response:", data);
 
       if (data.success) {
         console.log("✅ Interview created successfully");
 
         // Get the interview ID from the database
         // Since the API doesn't return the ID, we need to fetch the latest interview
+        console.log("🔍 Fetching latest interview ID...");
         const latestInterviewResponse = await fetch(
           `/api/interview/latest?userId=${userId}`
         );
@@ -97,15 +130,31 @@ const GenerateInterviewWrapper = ({
           const latestData = await latestInterviewResponse.json();
           if (latestData.interviewId) {
             console.log("✅ Got interview ID:", latestData.interviewId);
-            // Redirect to the interview page
-            router.push(`/interview/${latestData.interviewId}`);
+            
+            // Clean up sessionStorage
+            if (typeof window !== "undefined") {
+              sessionStorage.removeItem("prefilledInterview");
+              console.log("🧹 Cleared sessionStorage");
+            }
+
+            // Redirect to the interview page with the ID
+            const interviewPageUrl = `/interview/${latestData.interviewId}`;
+            console.log("🔗 Redirecting to:", interviewPageUrl);
+            router.push(interviewPageUrl);
+          } else {
+            console.error("❌ No interviewId in latest response");
+            setError("Interview created but couldn't load it. Please refresh.");
           }
+        } else {
+          console.error("❌ Failed to fetch latest interview");
+          setError("Interview created but couldn't be loaded. Please refresh.");
         }
       } else {
-        setError("Failed to create interview. Please try again.");
+        console.error("❌ API returned success:false", data);
+        setError(data.message || "Failed to create interview. Please try again.");
       }
     } catch (err) {
-      console.error("❌ Error creating interview:", err);
+      console.error("❌ CREATE_INTERVIEW Error:", err);
       setError("An error occurred. Please try again.");
     } finally {
       setIsCreating(false);

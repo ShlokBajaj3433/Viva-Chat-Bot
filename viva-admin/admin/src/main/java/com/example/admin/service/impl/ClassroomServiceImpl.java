@@ -1,7 +1,9 @@
 package com.example.admin.service.impl;
 
 import com.example.admin.dto.ClassroomDTO;
+import com.example.admin.dto.UserDTO;
 import com.example.admin.repository.ClassroomRepository;
+import com.example.admin.repository.UserRepository;
 import com.example.admin.service.ClassroomService;
 import org.springframework.stereotype.Service;
 
@@ -13,9 +15,11 @@ import java.util.Optional;
 public class ClassroomServiceImpl implements ClassroomService {
 
     private final ClassroomRepository classroomRepository;
+    private final UserRepository userRepository;
 
-    public ClassroomServiceImpl(ClassroomRepository classroomRepository) {
+    public ClassroomServiceImpl(ClassroomRepository classroomRepository, UserRepository userRepository) {
         this.classroomRepository = classroomRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -23,6 +27,17 @@ public class ClassroomServiceImpl implements ClassroomService {
         if (classroomDTO.getId() == null || classroomDTO.getId().isBlank()) {
             classroomDTO.setId("classroom-" + System.nanoTime());
         }
+        // Use document ID as the classroom code
+        classroomDTO.setCode(classroomDTO.getId());
+        
+        // Fetch and set teacher name from teacherId
+        if (classroomDTO.getTeacherId() != null && !classroomDTO.getTeacherId().isBlank()) {
+            Optional<UserDTO> teacher = userRepository.findById(classroomDTO.getTeacherId());
+            if (teacher.isPresent()) {
+                classroomDTO.setTeacherName(teacher.get().getDisplayName());
+            }
+        }
+        
         classroomDTO.setCreatedAt(Optional.ofNullable(classroomDTO.getCreatedAt()).orElse(LocalDateTime.now()));
         classroomDTO.setUpdatedAt(LocalDateTime.now());
         return classroomRepository.save(classroomDTO);
@@ -31,6 +46,33 @@ public class ClassroomServiceImpl implements ClassroomService {
     @Override
     public Optional<ClassroomDTO> getClassroomById(String id) {
         return classroomRepository.findById(id);
+    }
+
+    @Override
+    public Optional<ClassroomDTO> getClassroomByCode(String code) {
+        return classroomRepository.findByCode(code.toUpperCase());
+    }
+
+    @Override
+    public ClassroomDTO joinClassroomByCode(String code, String studentId) {
+        // Find classroom by document ID (code is the same as ID)
+        Optional<ClassroomDTO> classroomOpt = classroomRepository.findById(code.trim());
+        if (classroomOpt.isEmpty()) {
+            throw new IllegalArgumentException("Classroom not found. Please check the classroom ID.");
+        }
+
+        ClassroomDTO classroom = classroomOpt.get();
+
+        // Check if student is already enrolled
+        if (classroom.getStudentIds() != null && classroom.getStudentIds().contains(studentId)) {
+            throw new IllegalArgumentException("You are already enrolled in this classroom.");
+        }
+
+        // Add student to classroom
+        classroomRepository.addStudent(classroom.getId(), studentId);
+
+        // Return updated classroom
+        return classroomRepository.findById(classroom.getId()).orElse(classroom);
     }
 
     @Override
@@ -52,6 +94,18 @@ public class ClassroomServiceImpl implements ClassroomService {
         classroomDTO.setId(id);
         classroomDTO.setCreatedAt(existing.getCreatedAt());
         classroomDTO.setUpdatedAt(LocalDateTime.now());
+        
+        // Fetch and set teacher name from teacherId if provided
+        if (classroomDTO.getTeacherId() != null && !classroomDTO.getTeacherId().isBlank()) {
+            Optional<UserDTO> teacher = userRepository.findById(classroomDTO.getTeacherId());
+            if (teacher.isPresent()) {
+                classroomDTO.setTeacherName(teacher.get().getDisplayName());
+            }
+        } else if (existing.getTeacherName() != null) {
+            // Preserve existing teacher name if teacherId not provided
+            classroomDTO.setTeacherName(existing.getTeacherName());
+        }
+        
         classroomRepository.update(id, classroomDTO);
         return classroomDTO;
     }

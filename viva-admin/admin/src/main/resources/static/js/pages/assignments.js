@@ -97,8 +97,30 @@ async function saveAssignment(event) {
         description: document.getElementById('assignment-description').value.trim(),
         classroomId: document.getElementById('assignment-classroom').value.trim(),
         dueDate: dueDateValue ? new Date(dueDateValue).toISOString() : null,
-        type: document.getElementById('assignment-type').value
+        type: document.getElementById('assignment-type').value,
+        status: 'active'
     };
+
+    // Include vivaConfig when type is VIVA
+    if (data.type === 'VIVA') {
+        const role = document.getElementById('viva-role').value.trim();
+        const level = document.getElementById('viva-level').value.trim();
+        const techstackStr = document.getElementById('viva-techstack').value.trim();
+        const questionCount = document.getElementById('viva-questioncount').value;
+        const duration = document.getElementById('viva-duration').value;
+
+        if (!role || !level) {
+            showToast('Please fill role and level for Viva assignment', 'error');
+            return;
+        }
+        data.vivaConfig = {
+            role,
+            level,
+            techStack: techstackStr ? techstackStr.split(',').map(s => s.trim()).filter(Boolean) : [],
+            questionCount: questionCount ? parseInt(questionCount, 10) : undefined,
+            duration: duration ? parseInt(duration, 10) : undefined
+        };
+    }
 
     // Validation
     if (!data.title || !data.classroomId || !data.dueDate) {
@@ -153,4 +175,17 @@ function initAssignmentsPage() {
     if (form) {
         form.addEventListener('submit', saveAssignment);
     }
+
+    const typeSelect = document.getElementById('assignment-type');
+    if (typeSelect) {
+        typeSelect.addEventListener('change', toggleVivaFields);
+        toggleVivaFields();
+    }
+}
+
+function toggleVivaFields() {
+    const typeSelect = document.getElementById('assignment-type');
+    const vivaFields = document.getElementById('viva-config-fields');
+    if (!typeSelect || !vivaFields) return;
+    vivaFields.style.display = typeSelect.value === 'VIVA' ? 'block' : 'none';
 }

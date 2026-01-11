@@ -124,16 +124,16 @@ async function loadTeachersDropdown() {
 /**
  * Edit classroom
  */
-function editClassroom(classroom) {
-    loadTeachersDropdown();
+async function editClassroom(classroom) {
+    await loadTeachersDropdown();
     openModal('classroom', classroom);
 }
 
 /**
  * Open add classroom modal
  */
-window.addClassroom = function() {
-    loadTeachersDropdown();
+window.addClassroom = async function() {
+    await loadTeachersDropdown();
     openModal('classroom');
 };
 

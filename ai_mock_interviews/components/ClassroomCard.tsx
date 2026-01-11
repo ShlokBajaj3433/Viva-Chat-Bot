@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Users, BookOpen, MessageSquare, ChevronRight, Archive } from "lucide-react";
+import { Users, BookOpen, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 interface ClassroomCardProps {
@@ -33,7 +33,17 @@ export default function ClassroomCard({
 }: ClassroomCardProps) {
   const [isHovered, setIsHovered] = useState(false);
   const studentCount = classroom.studentIds?.length || 0;
-  const colorClass = getColorClass(classroom.code.charCodeAt(0) % CLASSROOM_COLORS.length);
+  const classCode = classroom.code || (classroom as any).classCode || "";
+  // Priority: teacherName (from backend) > instructorName > fallbacks
+  const instructorName =
+    (classroom as any).teacherName ||
+    classroom.instructorName ||
+    (classroom as any).teacher_name ||
+    (classroom as any)?.teacher?.name ||
+    "";
+  const subject = classroom.subject || (classroom as any).grade || "—";
+  const codeKey = classCode || "A";
+  const colorClass = getColorClass(codeKey.charCodeAt(0) % CLASSROOM_COLORS.length);
 
   const handleClick = () => {
     if (isClickable && onClick) {
@@ -64,35 +74,24 @@ export default function ClassroomCard({
               <h3 className="text-xl font-bold mb-1 line-clamp-2">
                 {classroom.name}
               </h3>
-              <p className="text-white/80 text-sm">{classroom.subject}</p>
+              <div className="flex flex-wrap items-center gap-2 text-sm text-white/90">
+                {instructorName && (
+                  <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 text-white backdrop-blur-sm text-base font-semibold">
+                    <User className="w-4 h-4" />
+                    <span className="leading-none">{instructorName}</span>
+                  </span>
+                )}
+                <span className="opacity-90 text-xs">{subject}</span>
+              </div>
             </div>
-            {classroom.status === "archived" && (
-              <Archive className="w-5 h-5 flex-shrink-0 ml-2" />
-            )}
-          </div>
-
-          <div className="text-white/90 text-xs font-mono bg-white/20 inline-block px-2 py-1 rounded">
-            {classroom.code}
           </div>
         </div>
       </div>
 
       {/* Body */}
       <div className="bg-white p-6">
-        {/* Instructor Info */}
-        {classroom.instructorName && (
-          <div className="mb-4 pb-4 border-b border-gray-200">
-            <p className="text-xs text-gray-600 font-semibold uppercase tracking-wider">
-              Instructor
-            </p>
-            <p className="text-sm font-medium text-gray-900 mt-1">
-              {classroom.instructorName}
-            </p>
-          </div>
-        )}
-
         {/* Room & Section Info */}
-        <div className="grid grid-cols-2 gap-4 mb-4 pb-4 border-b border-gray-200">
+        <div className="grid grid-cols-2 gap-4 mb-3 pb-3 border-b border-gray-100">
           {classroom.section && (
             <div>
               <p className="text-xs text-gray-600 font-semibold uppercase tracking-wider">
@@ -117,7 +116,7 @@ export default function ClassroomCard({
 
         {/* Description */}
         {classroom.description && (
-          <div className="mb-4 pb-4 border-b border-gray-200">
+          <div className="mb-3 pb-3 border-b border-gray-100">
             <p className="text-xs text-gray-600 font-semibold uppercase tracking-wider mb-1">
               Description
             </p>
@@ -127,21 +126,9 @@ export default function ClassroomCard({
           </div>
         )}
 
-        {/* Stats */}
-        <div className="flex items-center justify-between text-xs text-gray-600">
-          <div className="flex items-center gap-1">
-            <Users className="w-4 h-4" />
-            <span>{studentCount} {studentCount === 1 ? "Student" : "Students"}</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <BookOpen className="w-4 h-4" />
-            <span>View Details</span>
-          </div>
-        </div>
-
         {/* Action Button */}
         <Button
-          className="w-full mt-4 bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white"
+          className="w-full mt-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
           size="sm"
         >
           <span className="flex-1">Enter Classroom</span>

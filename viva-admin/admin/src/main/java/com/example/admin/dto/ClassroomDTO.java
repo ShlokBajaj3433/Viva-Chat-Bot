@@ -6,6 +6,7 @@ import java.util.List;
 public class ClassroomDTO {
     private String id;
     private String name;
+    private String code;  // 6-character unique classroom code
     private String description;
     private String teacherId;
     private String teacherName;
@@ -40,6 +41,14 @@ public class ClassroomDTO {
 
     public void setName(String name) {
         this.name = name;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
     }
 
     public String getDescription() {

@@ -1,14 +1,80 @@
 "use server";
 
 import { db } from "@/firebase/admin";
-import crypto from "crypto";
 
-/**
- * Generate a unique 6-character classroom code
- */
-function generateClassroomCode(): string {
-  return crypto.randomBytes(3).toString("hex").toUpperCase();
-}
+// Ensure Firestore timestamps and other non-serializable values are converted
+// before crossing the server/client boundary in Next.js.
+const normalizeTimestamp = (value: any): string => {
+  if (!value) return new Date().toISOString();
+  if (typeof value === "string") return value;
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value?.toDate === "function") return value.toDate().toISOString();
+  if (value._seconds != null && value._nanoseconds != null) {
+    const millis = value._seconds * 1000 + Math.floor(value._nanoseconds / 1_000_000);
+    return new Date(millis).toISOString();
+  }
+  return new Date(value).toISOString();
+};
+
+const serializeClassroom = (data: any, id?: string): Classroom => {
+  const classCode = data.code ?? data.classCode ?? id ?? "";
+  // Priority order: teacherName (from backend) > instructorName > fallbacks
+  const instructorName =
+    data.teacherName ??
+    data.instructorName ??
+    data.teacher_name ??
+    data.teacher?.name ??
+    "";
+  const subject = data.subject ?? data.grade ?? "";
+  const status = data.status ?? data.state ?? "active";
+  const studentIds = data.studentIds ?? data.students ?? [];
+
+  return {
+    ...data,
+    id: id ?? data.id ?? classCode ?? "",
+    code: classCode,
+    instructorName,
+    subject,
+    status,
+    studentIds,
+    createdAt: normalizeTimestamp(data.createdAt ?? data.created_at),
+    updatedAt: normalizeTimestamp(data.updatedAt ?? data.updated_at ?? data.createdAt ?? data.created_at),
+  };
+};
+
+const serializeAssignment = (
+  data: any,
+  id?: string
+): ClassroomAssignment => {
+  const assignmentType: ClassroomAssignment["assignmentType"] = (data.assignmentType ?? (data.type ? String(data.type).toLowerCase() : "quiz")) as any;
+  const vivaConfig = data.vivaConfig
+    ? {
+        role: data.vivaConfig.role,
+        level: data.vivaConfig.level,
+        techStack: Array.isArray(data.vivaConfig.techStack)
+          ? data.vivaConfig.techStack
+          : typeof data.vivaConfig.techStack === "string"
+          ? data.vivaConfig.techStack.split(",").map((s: string) => s.trim()).filter(Boolean)
+          : [],
+        questionCount: data.vivaConfig.questionCount,
+        duration: data.vivaConfig.duration,
+      }
+    : undefined;
+
+  return {
+    id: id ?? data.id,
+    classroomId: data.classroomId,
+    title: data.title,
+    description: data.description,
+    subject: data.subject,
+    dueDate: normalizeTimestamp(data.dueDate),
+    createdAt: normalizeTimestamp(data.createdAt),
+    updatedAt: normalizeTimestamp(data.updatedAt ?? data.createdAt),
+    status: (data.status ?? "active") as any,
+    assignmentType,
+    vivaConfig,
+  } as ClassroomAssignment;
+};
 
 /**
  * Create a new classroom (instructor action)
@@ -35,13 +101,12 @@ export async function createClassroom(params: {
       color,
     } = params;
 
-    const code = generateClassroomCode();
     const now = new Date().toISOString();
 
     const classroomData: Classroom = {
       id: "", // Will be set by Firestore
       name,
-      code,
+      code: "", // Will be set to the document ID
       subject,
       description,
       instructorId,
@@ -57,6 +122,10 @@ export async function createClassroom(params: {
 
     const docRef = await db.collection("classrooms").add(classroomData);
     classroomData.id = docRef.id;
+    classroomData.code = docRef.id; // Use document ID as code
+
+    // Update the document with the ID and code
+    await docRef.update({ id: docRef.id, code: docRef.id });
 
     return classroomData;
   } catch (error) {
@@ -66,7 +135,7 @@ export async function createClassroom(params: {
 }
 
 /**
- * Join a classroom using classroom code
+ * Join a classroom using classroom ID
  */
 export async function joinClassroom(params: {
   classroomCode: string;
@@ -75,27 +144,26 @@ export async function joinClassroom(params: {
   try {
     const { classroomCode, studentId } = params;
 
-    // Find classroom by code
-    const snapshot = await db
+    // Find classroom by document ID
+    const classroomDoc = await db
       .collection("classrooms")
-      .where("code", "==", classroomCode.toUpperCase())
-      .limit(1)
+      .doc(classroomCode.trim())
       .get();
 
-    if (snapshot.empty) {
-      throw new Error("Classroom not found. Please check the class code.");
+    if (!classroomDoc.exists) {
+      throw new Error("Classroom not found. Please check the classroom ID.");
     }
 
-    const classroomDoc = snapshot.docs[0];
     const classroom = classroomDoc.data() as Classroom;
+    const existingStudentIds = classroom.studentIds ?? [];
 
     // Check if student is already enrolled
-    if (classroom.studentIds.includes(studentId)) {
+    if (existingStudentIds.includes(studentId)) {
       throw new Error("You are already enrolled in this classroom.");
     }
 
     // Add student to classroom
-    const updatedStudentIds = [...classroom.studentIds, studentId];
+    const updatedStudentIds = [...existingStudentIds, studentId];
     const now = new Date().toISOString();
 
     await classroomDoc.ref.update({
@@ -119,7 +187,7 @@ export async function joinClassroom(params: {
     classroom.studentIds = updatedStudentIds;
     classroom.updatedAt = now;
 
-    return classroom;
+    return serializeClassroom(classroom, classroomDoc.id);
   } catch (error) {
     console.error("Error joining classroom:", error);
     throw error;
@@ -139,8 +207,7 @@ export async function getStudentClassrooms(studentId: string): Promise<Classroom
     const classrooms: Classroom[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data() as Classroom;
-      data.id = doc.id;
-      classrooms.push(data);
+      classrooms.push(serializeClassroom(data, doc.id));
     });
 
     return classrooms.sort(
@@ -165,8 +232,7 @@ export async function getClassroom(classroomId: string): Promise<Classroom | nul
     }
 
     const classroom = doc.data() as Classroom;
-    classroom.id = doc.id;
-    return classroom;
+    return serializeClassroom(classroom, doc.id);
   } catch (error) {
     console.error("Error fetching classroom:", error);
     throw new Error("Failed to fetch classroom");
@@ -242,20 +308,17 @@ export async function getClassroomAssignments(
 ): Promise<ClassroomAssignment[]> {
   try {
     const snapshot = await db
-      .collection("classrooms")
-      .doc(classroomId)
       .collection("assignments")
-      .orderBy("dueDate", "asc")
+      .where("classroomId", "==", classroomId)
       .get();
 
     const assignments: ClassroomAssignment[] = [];
     snapshot.forEach((doc) => {
       const data = doc.data() as ClassroomAssignment;
-      data.id = doc.id;
-      assignments.push(data);
+      assignments.push(serializeAssignment(data, doc.id));
     });
 
-    return assignments;
+    return assignments.sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime());
   } catch (error) {
     console.error("Error fetching classroom assignments:", error);
     throw new Error("Failed to fetch assignments");

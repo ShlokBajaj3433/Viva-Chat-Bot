@@ -63,6 +63,22 @@ public class FirestoreClassroomRepository implements ClassroomRepository {
     }
 
     @Override
+    public Optional<ClassroomDTO> findByCode(String code) {
+        try {
+            Query query = firestore.collection(COLLECTION).whereEqualTo("code", code.toUpperCase()).limit(1);
+            ApiFuture<QuerySnapshot> future = query.get();
+            List<QueryDocumentSnapshot> docs = future.get().getDocuments();
+            if (docs.isEmpty()) {
+                return Optional.empty();
+            }
+            return Optional.ofNullable(toClassroom(docs.get(0)));
+        } catch (InterruptedException | ExecutionException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("Failed to find classroom by code", e);
+        }
+    }
+
+    @Override
     public List<ClassroomDTO> findByTeacherId(String teacherId) {
         try {
             Query query = firestore.collection(COLLECTION).whereEqualTo("teacherId", teacherId);

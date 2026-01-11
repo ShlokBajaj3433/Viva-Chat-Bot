@@ -9,6 +9,7 @@ public interface AssignmentService {
     Optional<AssignmentDTO> getAssignmentById(String id);
     List<AssignmentDTO> getAssignmentsByClassroomId(String classroomId);
     List<AssignmentDTO> getAssignmentsByTeacherId(String teacherId);
+    List<AssignmentDTO> getAllAssignments();
     AssignmentDTO updateAssignment(String id, AssignmentDTO assignmentDTO);
     void deleteAssignment(String id);
     void publishAssignment(String id);

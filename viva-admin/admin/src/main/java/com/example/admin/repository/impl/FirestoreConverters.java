@@ -31,6 +31,12 @@ final class FirestoreConverters {
         data.put("emailVerified", dto.isEmailVerified());
         data.put("createdAt", toTimestamp(dto.getCreatedAt()));
         data.put("updatedAt", toTimestamp(dto.getUpdatedAt()));
+        if (dto.getEnrollmentNumber() != null) {
+            data.put("enrollmentNumber", dto.getEnrollmentNumber());
+        }
+        if (dto.getRollNumber() != null) {
+            data.put("rollNumber", dto.getRollNumber());
+        }
         return data;
     }
 
@@ -38,6 +44,12 @@ final class FirestoreConverters {
         Map<String, Object> data = toMap(dto);
         data.put("passwordHash", hashedPassword);
         data.put("mustChangePassword", true); // Force password change on first login
+        if (dto.getEnrollmentNumber() != null) {
+            data.put("enrollmentNumber", dto.getEnrollmentNumber());
+        }
+        if (dto.getRollNumber() != null) {
+            data.put("rollNumber", dto.getRollNumber());
+        }
         return data;
     }
 
@@ -61,6 +73,8 @@ final class FirestoreConverters {
         dto.setEmailVerified(Boolean.TRUE.equals(emailVerified));
         dto.setCreatedAt(fromTimestamp(doc.get("createdAt")));
         dto.setUpdatedAt(fromTimestamp(doc.get("updatedAt")));
+        dto.setEnrollmentNumber(doc.getString("enrollmentNumber"));
+        dto.setRollNumber(doc.getString("rollNumber"));
         return dto;
     }
 
@@ -68,6 +82,7 @@ final class FirestoreConverters {
         Map<String, Object> data = new HashMap<>();
         data.put("id", dto.getId());
         data.put("name", dto.getName());
+        data.put("code", dto.getCode());
         data.put("description", dto.getDescription());
         data.put("teacherId", dto.getTeacherId());
         data.put("teacherName", dto.getTeacherName());
@@ -86,6 +101,7 @@ final class FirestoreConverters {
         ClassroomDTO dto = new ClassroomDTO();
         dto.setId(doc.getString("id"));
         dto.setName(doc.getString("name"));
+        dto.setCode(doc.getString("code"));
         dto.setDescription(doc.getString("description"));
         dto.setTeacherId(doc.getString("teacherId"));
         dto.setTeacherName(doc.getString("teacherName"));
@@ -109,6 +125,17 @@ final class FirestoreConverters {
         data.put("dueDate", toTimestamp(dto.getDueDate()));
         data.put("totalPoints", dto.getTotalPoints());
         data.put("published", dto.isPublished());
+        data.put("type", dto.getType());
+        data.put("status", dto.getStatus());
+        if (dto.getVivaConfig() != null) {
+            Map<String, Object> viva = new HashMap<>();
+            viva.put("role", dto.getVivaConfig().getRole());
+            viva.put("level", dto.getVivaConfig().getLevel());
+            viva.put("techStack", Optional.ofNullable(dto.getVivaConfig().getTechStack()).orElseGet(ArrayList::new));
+            viva.put("questionCount", dto.getVivaConfig().getQuestionCount());
+            viva.put("duration", dto.getVivaConfig().getDuration());
+            data.put("vivaConfig", viva);
+        }
         data.put("createdAt", toTimestamp(dto.getCreatedAt()));
         data.put("updatedAt", toTimestamp(dto.getUpdatedAt()));
         return data;
@@ -131,6 +158,27 @@ final class FirestoreConverters {
         dto.setTotalPoints(totalPoints != null ? totalPoints.intValue() : 0);
         Boolean published = doc.getBoolean("published");
         dto.setPublished(Boolean.TRUE.equals(published));
+        dto.setType(doc.getString("type"));
+        dto.setStatus(doc.getString("status"));
+        Object vc = doc.get("vivaConfig");
+        if (vc instanceof Map<?, ?> map) {
+            AssignmentDTO.VivaConfig vivaConfig = new AssignmentDTO.VivaConfig();
+            vivaConfig.setRole((String) map.get("role"));
+            vivaConfig.setLevel((String) map.get("level"));
+            Object ts = map.get("techStack");
+            if (ts instanceof List<?> list) {
+                List<String> stack = new ArrayList<>();
+                for (Object o : list) {
+                    if (o != null) stack.add(String.valueOf(o));
+                }
+                vivaConfig.setTechStack(stack);
+            }
+            Object qc = map.get("questionCount");
+            if (qc instanceof Number n) vivaConfig.setQuestionCount(n.intValue());
+            Object dur = map.get("duration");
+            if (dur instanceof Number n) vivaConfig.setDuration(n.intValue());
+            dto.setVivaConfig(vivaConfig);
+        }
         dto.setCreatedAt(fromTimestamp(doc.get("createdAt")));
         dto.setUpdatedAt(fromTimestamp(doc.get("updatedAt")));
         return dto;

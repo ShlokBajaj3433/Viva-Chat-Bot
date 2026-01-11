@@ -117,7 +117,16 @@ function populateForm(type, data) {
             document.getElementById('assignment-title').value = data.title || '';
             document.getElementById('assignment-description').value = data.description || '';
             document.getElementById('assignment-classroom').value = data.classroomId || '';
-            document.getElementById('assignment-type').value = data.type || 'QUIZ';
+            document.getElementById('assignment-type').value = data.type || 'VIVA';
+            toggleVivaFields();
+            if (data.vivaConfig) {
+                document.getElementById('viva-role').value = data.vivaConfig.role || '';
+                document.getElementById('viva-level').value = data.vivaConfig.level || '';
+                const ts = Array.isArray(data.vivaConfig.techStack) ? data.vivaConfig.techStack.join(', ') : (data.vivaConfig.techStack || '');
+                document.getElementById('viva-techstack').value = ts;
+                document.getElementById('viva-questioncount').value = data.vivaConfig.questionCount || '';
+                document.getElementById('viva-duration').value = data.vivaConfig.duration || '';
+            }
             if (data.dueDate) {
                 const date = new Date(data.dueDate);
                 document.getElementById('assignment-duedate').value = date.toISOString().slice(0, 16);
