@@ -1,6 +1,8 @@
 package com.example.admin.controller;
 
 import com.example.admin.dto.BulkStudentUploadResult;
+import com.example.admin.enums.UserRole;
+import com.example.admin.security.RequireRole;
 import com.example.admin.service.BulkStudentService;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -25,8 +27,10 @@ public class BulkStudentController {
 
     /**
      * Upload Excel file to bulk create students
+     * Accessible by SUPER_ADMIN, ADMIN, and TEACHER
      */
     @PostMapping("/bulk-upload")
+    @RequireRole({UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER})
     public ResponseEntity<BulkStudentUploadResult> bulkUploadStudents(
             @RequestParam("file") MultipartFile file,
             @RequestParam(value = "classroomId", required = false) String classroomId) {
@@ -42,8 +46,10 @@ public class BulkStudentController {
 
     /**
      * Download Excel template for student upload
+     * Accessible by SUPER_ADMIN, ADMIN, and TEACHER
      */
     @GetMapping("/template")
+    @RequireRole({UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER})
     public ResponseEntity<byte[]> downloadTemplate() {
         try (Workbook workbook = new XSSFWorkbook()) {
             Sheet sheet = workbook.createSheet("Students");

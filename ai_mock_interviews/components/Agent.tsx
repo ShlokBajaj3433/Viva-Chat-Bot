@@ -446,11 +446,14 @@ const Agent = ({
 
           if (providedInfo.length > 0) {
             configInstructions =
-              "\n\n=== USER HAS PRE-CONFIGURED ===\n" +
+              "\n\n=== STRICT PRE-CONFIGURED SCOPE ===\n" +
               providedInfo.join("\n") +
-              "\n\nDO NOT ask about: name, subject, year, semester, topics, or interview type.\n" +
-              "Start directly with interview questions.\n" +
-              "=== END PRE-CONFIGURED ===\n";
+              "\n\nRULES:\n" +
+              "- Do NOT ask what topic/subject to cover.\n" +
+              "- Do NOT change or broaden topics.\n" +
+              "- Begin immediately with in-depth viva questions ONLY on the provided subject/topics.\n" +
+              "- If user tries to change topics, refuse and continue with the original topics.\n" +
+              "=== END SCOPE ===\n";
           }
         }
 
@@ -503,8 +506,8 @@ const Agent = ({
           .join("\n");
       }
 
-      // Build configuration summary for the interviewer
-      let configSummary = "";
+      // Build configuration instructions for the interviewer
+      let configInstructions = "";
       if (config && Object.keys(config).length > 0) {
         const parts: string[] = [];
         if (config.subject) parts.push(`Subject/Course: ${config.subject}`);
@@ -522,30 +525,42 @@ const Agent = ({
         }
 
         if (parts.length > 0) {
-          configSummary =
-            "\n\n=== PRE-CONFIGURED INFORMATION ===\n" +
-            "The candidate has already provided the following details:\n" +
+          configInstructions =
+            "=== STRICT PRE-CONFIGURED SCOPE ===\n" +
             parts.join("\n") +
-            "\n\n⚠️ IMPORTANT INSTRUCTIONS:\n" +
-            "1. DO NOT ask the candidate about any of these details again\n" +
-            "2. DO NOT ask for their name, subject, year, or topics - you already have this information\n" +
-            "3. Skip all introductory questions about background and preferences\n" +
-            "4. Start DIRECTLY with the interview questions based on the topics provided\n" +
-            "5. Focus your questions on: " +
-            (config.topics || config.subject || "general knowledge") +
-            "\n" +
-            "6. Keep the interview focused and efficient\n" +
-            "=== END PRE-CONFIGURED INFORMATION ===\n";
+            "\n\nRULES:\n" +
+            "- Do NOT ask what topic/subject to cover.\n" +
+            "- Do NOT change or broaden topics.\n" +
+            "- Begin immediately with in-depth viva questions ONLY on the provided subject/topics.\n" +
+            "- If user tries to change topics, politely refuse and continue on the original topics.\n" +
+            "- Keep questions focused and specific; avoid generic questions.\n" +
+            "=== END SCOPE ===";
         }
       }
 
+      console.log("📋 Interview Config:", {
+        config,
+        configInstructions,
+        formattedQuestions: formattedQuestions.substring(0, 100),
+      });
+
+      // Debug: ensure we are sending exactly the selected subject/topics
+      console.log("🔎 Debug - topic payload", {
+        sentSubject: config?.subject,
+        sentTopics: config?.topics,
+        sentType: config?.type,
+        sentIsTechnical: config?.isTechnical,
+      });
+
       const result = await startUsingWorkflow({
-        questions: formattedQuestions,
         username: userName,
         userid: userId,
-        interviewId,
-        configSummary, // Pass the configuration summary to the workflow
-        ...config, // Include all config fields
+        configInstructions,
+        subject: config?.subject || "",
+        year: config?.year || "",
+        topics: config?.topics || "",
+        type: config?.type || "",
+        isTechnical: config?.isTechnical ?? false,
       });
 
       if (!result.ok) {

@@ -1,0 +1,41 @@
+# Build outputs
+build/
+target/
+*.log
+*.tmp
+
+# Gradle
+.gradle/
+gradle-wrapper.jar
+
+# IDE files
+.idea/
+.vscode/
+*.iml
+*.ipr
+*.iws
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+.gitattributes
+
+# Documentation
+README.md
+*.md
+HELP.md
+
+# Test files
+src/test/
+
+# Firebase credentials (should be mounted at runtime)
+firebase-service-account.json
+
+# Environment files
+.env
+.env.local
+.env.*.local

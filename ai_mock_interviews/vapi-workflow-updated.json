@@ -53,18 +53,9 @@
           "y": -100
         }
       },
-      "prompt": "You are a friendly viva examiner. Greet the student warmly and check if you already have their name.\n\n{{configInstructions}}\n\nIf you have the username variable, greet them by name. If not, ask for their name politely.",
-      "variableExtractionPlan": {
-        "output": [
-          {
-            "type": "string",
-            "title": "studentName",
-            "description": "The student's name"
-          }
-        ]
-      },
+      "prompt": "You are a professional viva examiner. \n\n{{configInstructions}}\n\nGreet the student by their name (if you have it from username variable). Keep your greeting brief and professional.",
       "messagePlan": {
-        "firstMessage": "Hello! I'm your viva examiner today. What's your name?"
+        "firstMessage": "Hello! I'm ready to conduct your viva examination."
       }
     },
     {
@@ -76,43 +67,9 @@
           "y": 200
         }
       },
-      "prompt": "{{configInstructions}}\n\nCheck which information is already provided:\n- If subject={{subject}} has a value, don't ask about subject\n- If year={{year}} has a value, don't ask about year\n- If topics={{topics}} has a value, don't ask about topics\n- If type={{type}} has a value, don't ask about type\n\nOnly ask for information that is missing. Be natural and conversational.",
-      "variableExtractionPlan": {
-        "output": [
-          {
-            "type": "string",
-            "title": "finalSubject",
-            "description": "Subject (use existing value if available)"
-          },
-          {
-            "type": "string",
-            "title": "finalYear",
-            "description": "Year/semester (use existing value if available)"
-          },
-          {
-            "type": "string",
-            "title": "finalTopics",
-            "description": "Topics (use existing value if available)"
-          },
-          {
-            "type": "string",
-            "title": "finalType",
-            "description": "Interview type (use existing value if available)"
-          },
-          {
-            "type": "string",
-            "title": "amount",
-            "description": "Number of questions"
-          },
-          {
-            "type": "string",
-            "title": "difficultyLevel",
-            "description": "Difficulty level"
-          }
-        ]
-      },
+      "prompt": "Based on the pre-configured information provided:\n- Subject: {{subject}}\n- Year: {{year}}\n- Topics: {{topics}}\n- Type: {{type}}\n- Technical Focus: {{isTechnical}}\n\n{{configInstructions}}\n\nIf ALL of these are already provided (not empty), proceed directly to examination without asking any questions.\nOnly ask for missing information.\nBe very brief - just confirm what you have and proceed.",
       "messagePlan": {
-        "firstMessage": "Great! Now, what subject would you like to be examined on today?"
+        "firstMessage": "I have all the information. Let's begin the examination."
       }
     },
     {

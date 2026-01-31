@@ -3,13 +3,19 @@ package com.example.admin.controller;
 import com.example.admin.dto.LoginRequest;
 import com.example.admin.dto.LoginResponse;
 import com.example.admin.dto.UserDTO;
+import com.example.admin.enums.UserRole;
+import com.example.admin.security.JwtAuthDetails;
 import com.example.admin.security.JwtUtils;
+import com.example.admin.security.RequireRole;
 import com.example.admin.service.UserService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -25,9 +31,27 @@ public class UserController {
     }
 
     @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
-        UserDTO created = userService.createUser(userDTO);
-        return ResponseEntity.status(HttpStatus.CREATED).body(created);
+    @RequireRole({UserRole.SUPER_ADMIN, UserRole.ADMIN})
+    public ResponseEntity<?> createUser(@RequestBody UserDTO userDTO) {
+        try {
+            // Get authenticated user
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            JwtAuthDetails authDetails = (JwtAuthDetails) authentication.getDetails();
+            UserRole creatorRole = UserRole.valueOf(authDetails.getRole());
+            UserRole targetRole = userDTO.getRole();
+            
+            // Check if creator has permission to create this role
+            if (!creatorRole.hasPermissionFor(targetRole)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "You don't have permission to create users with this role"));
+            }
+            
+            UserDTO created = userService.createUser(userDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(created);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to create user: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/login")
@@ -108,27 +132,86 @@ public class UserController {
     }
 
     @GetMapping
+    @RequireRole({UserRole.SUPER_ADMIN, UserRole.ADMIN})
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         List<UserDTO> users = userService.getAllUsers();
         return ResponseEntity.ok(users);
     }
 
     @GetMapping("/role/{role}")
+    @RequireRole({UserRole.SUPER_ADMIN, UserRole.ADMIN})
     public ResponseEntity<List<UserDTO>> getUsersByRole(@PathVariable String role) {
         List<UserDTO> users = userService.getUsersByRole(role);
         return ResponseEntity.ok(users);
     }
 
     @PutMapping("/{uid}")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable String uid, @RequestBody UserDTO userDTO) {
-        UserDTO updated = userService.updateUser(uid, userDTO);
-        return ResponseEntity.ok(updated);
+    @RequireRole({UserRole.SUPER_ADMIN, UserRole.ADMIN, UserRole.TEACHER})
+    public ResponseEntity<?> updateUser(@PathVariable String uid, @RequestBody UserDTO userDTO) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            JwtAuthDetails authDetails = (JwtAuthDetails) authentication.getDetails();
+            UserRole creatorRole = UserRole.valueOf(authDetails.getRole());
+            String currentUserUid = authDetails.getUid();
+            
+            // Teachers can only update their own profile
+            if (creatorRole == UserRole.TEACHER && !currentUserUid.equals(uid)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "Teachers can only update their own profile"));
+            }
+            
+            // Get target user's current role
+            Optional<UserDTO> targetUser = userService.getUserById(uid);
+            if (targetUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found"));
+            }
+            
+            UserRole targetRole = targetUser.get().getRole();
+            
+            // Check if creator has permission to update this role
+            if (!creatorRole.hasPermissionFor(targetRole)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "You don't have permission to update this user"));
+            }
+            
+            UserDTO updated = userService.updateUser(uid, userDTO);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to update user: " + e.getMessage()));
+        }
     }
 
     @DeleteMapping("/{uid}")
-    public ResponseEntity<Void> deleteUser(@PathVariable String uid) {
-        userService.deleteUser(uid);
-        return ResponseEntity.noContent().build();
+    @RequireRole({UserRole.SUPER_ADMIN, UserRole.ADMIN})
+    public ResponseEntity<?> deleteUser(@PathVariable String uid) {
+        try {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+            JwtAuthDetails authDetails = (JwtAuthDetails) authentication.getDetails();
+            UserRole creatorRole = UserRole.valueOf(authDetails.getRole());
+            
+            // Get target user's role
+            Optional<UserDTO> targetUser = userService.getUserById(uid);
+            if (targetUser.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                        .body(Map.of("error", "User not found"));
+            }
+            
+            UserRole targetRole = targetUser.get().getRole();
+            
+            // Check if creator has permission to delete this role
+            if (!creatorRole.hasPermissionFor(targetRole)) {
+                return ResponseEntity.status(HttpStatus.FORBIDDEN)
+                        .body(Map.of("error", "You don't have permission to delete this user"));
+            }
+            
+            userService.deleteUser(uid);
+            return ResponseEntity.noContent().build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Failed to delete user: " + e.getMessage()));
+        }
     }
 
     @PostMapping("/setup/superadmin")
@@ -138,16 +221,16 @@ public class UserController {
                 "super_admin_001",
                 "admin@viva.com",
                 "Super Admin",
-                com.example.admin.enums.UserRole.ADMIN
+                UserRole.SUPER_ADMIN
             );
             UserDTO created = userService.createUser(superAdmin);
-            return ResponseEntity.status(HttpStatus.CREATED).body(java.util.Map.of(
+            return ResponseEntity.status(HttpStatus.CREATED).body(Map.of(
                 "ok", true,
                 "message", "Super Admin created successfully",
                 "user", created
             ));
         } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).body(java.util.Map.of(
+            return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of(
                 "ok", false,
                 "error", "Super Admin already exists or error occurred: " + e.getMessage()
             ));

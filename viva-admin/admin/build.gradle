@@ -28,6 +28,9 @@ dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-security'
 	implementation 'org.springframework.boot:spring-boot-starter-validation'
 	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// AOP support for role-based authorization
+	implementation 'org.springframework:spring-aop:6.2.1'
+	implementation 'org.aspectj:aspectjweaver:1.9.22'
 	// Load .env files
 	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
 	// Firebase Admin SDK for Java (Firestore, Auth, etc.)

@@ -32,3 +32,5 @@ viva-admin/admin/.gradle/
 ai_mock_interviews/node_modules/
 ai_mock_interviews/.next/
 ai_mock_interviews/.env.local
+COST_SUMMARY.md
+PROJECT_COST_ANALYSIS.md
