@@ -113,7 +113,7 @@ const ContactPage = () => {
             Get in Touch
           </h1>
           <p className="text-xl opacity-90 max-w-3xl mx-auto">
-            Have questions about VivaChat? We're here to help! Reach out to our
+            Have questions about VivaChat? We&apos;re here to help! Reach out to our
             friendly support team for assistance with your viva practice
             journey.
           </p>
@@ -156,7 +156,7 @@ const ContactPage = () => {
               Send Us a Message
             </h2>
             <p className="text-lg text-gray-600">
-              Fill out the form below and we'll get back to you as soon as
+              Fill out the form below and we&apos;ll get back to you as soon as
               possible
             </p>
           </div>
@@ -310,7 +310,7 @@ const ContactPage = () => {
         <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl font-bold mb-4">Still Have Questions?</h2>
           <p className="text-xl opacity-90 mb-8">
-            Our support team is here to help you succeed with VivaChat. Don't
+            Our support team is here to help you succeed with VivaChat. Don&apos;t
             hesitate to reach out!
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">

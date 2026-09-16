@@ -9,6 +9,7 @@ import { vapi } from "@/lib/vapi.sdk";
 import { interviewer } from "@/constants";
 import { createFeedback } from "@/lib/actions/general.action";
 import { InterviewConfigForm, InterviewConfig } from "./InterviewConfigForm";
+import type { Message } from "@vapi-ai/web";
 
 enum CallStatus {
   INACTIVE = "INACTIVE",
@@ -106,6 +107,15 @@ const extractVapiErrorInfo = (raw: unknown): VapiErrorInfo => {
   return {};
 };
 
+interface AgentProps {
+  userName: string;
+  userId: string;
+  interviewId: string;
+  feedbackId?: string;
+  type: "interview" | "generate";
+  questions?: string[];
+}
+
 const Agent = ({
   userName,
   userId,
@@ -122,7 +132,9 @@ const Agent = ({
   const [showConfigForm, setShowConfigForm] = useState(true);
   const [interviewConfig, setInterviewConfig] = useState<InterviewConfig>({});
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
-  const hasRedirectedRef = useRef(false); // Track if we've already redirected
+  const [vapiError, setVapiError] = useState<string | null>(null);
+  const hasRedirectedRef = useRef(false);
+  const handlersRef = useRef<Record<string, (...args: unknown[]) => void>>({});
 
   console.log(
     "Agent Component Rendered - Type:",
@@ -147,73 +159,53 @@ const Agent = ({
   }, []);
 
   useEffect(() => {
-    const onCallStart = () => {
-      console.log("📞 VAPI call started");
-      setCallStatus(CallStatus.ACTIVE);
+    const handlers = {
+      "call-start": () => {
+        console.log("📞 VAPI call started");
+        setCallStatus(CallStatus.ACTIVE);
+      },
+      "call-end": () => {
+        console.log("📞 VAPI call ended");
+        setCallStatus(CallStatus.FINISHED);
+      },
+      message: (message: Message) => {
+        if (message.type === "transcript" && message.transcriptType === "final") {
+          const newMessage = { role: message.role, content: message.transcript };
+          setMessages((prev) => [...prev, newMessage]);
+        }
+      },
+      "speech-start": () => {
+        setIsSpeaking(true);
+      },
+      "speech-end": () => {
+        setIsSpeaking(false);
+      },
+      "call-start-progress": (event: unknown) => {
+        console.debug("[Vapi] call-start-progress", event);
+      },
+      "call-start-failed": (event: unknown) => {
+        console.error("[Vapi] call-start-failed", event);
+      },
+      "call-start-success": (event: unknown) => {
+        console.debug("[Vapi] call-start-success", event);
+      },
+      error: (error: unknown) => {
+        const info = extractVapiErrorInfo(error);
+        console.error("[Vapi] error", info, error);
+        setVapiError(info.message || "Voice connection error. Please refresh and try again.");
+      },
     };
 
-    const onCallEnd = () => {
-      console.log("📞 VAPI call ended (onCallEnd event)");
-      console.log("   - Type:", type);
-      console.log("   - InterviewId:", interviewId);
-      console.log("   - Messages count:", messages.length);
-      setCallStatus(CallStatus.FINISHED);
-    };
+    handlersRef.current = handlers;
 
-    const onMessage = (message: Message) => {
-      if (message.type === "transcript" && message.transcriptType === "final") {
-        const newMessage = { role: message.role, content: message.transcript };
-        setMessages((prev) => [...prev, newMessage]);
-      }
-    };
-
-    const onSpeechStart = () => {
-      console.log("speech start");
-      setIsSpeaking(true);
-    };
-
-    const onSpeechEnd = () => {
-      console.log("speech end");
-      setIsSpeaking(false);
-    };
-
-    const onCallStartProgress = (event: unknown) => {
-      console.debug("[Vapi] call-start-progress", event);
-    };
-
-    const onCallStartFailed = (event: unknown) => {
-      console.error("[Vapi] call-start-failed", event);
-    };
-
-    const onCallStartSuccess = (event: unknown) => {
-      console.debug("[Vapi] call-start-success", event);
-    };
-
-    const onError = (error: unknown) => {
-      const info = extractVapiErrorInfo(error);
-      console.error("[Vapi] error", info, error);
-    };
-
-    vapi.on("call-start", onCallStart);
-    vapi.on("call-end", onCallEnd);
-    vapi.on("message", onMessage);
-    vapi.on("speech-start", onSpeechStart);
-    vapi.on("speech-end", onSpeechEnd);
-    vapi.on("error", onError);
-    vapi.on("call-start-progress", onCallStartProgress);
-    vapi.on("call-start-failed", onCallStartFailed);
-    vapi.on("call-start-success", onCallStartSuccess);
+    Object.entries(handlers).forEach(([event, handler]) => {
+      vapi.on(event, handler);
+    });
 
     return () => {
-      vapi.off("call-start", onCallStart);
-      vapi.off("call-end", onCallEnd);
-      vapi.off("message", onMessage);
-      vapi.off("speech-start", onSpeechStart);
-      vapi.off("speech-end", onSpeechEnd);
-      vapi.off("error", onError);
-      vapi.off("call-start-progress", onCallStartProgress);
-      vapi.off("call-start-failed", onCallStartFailed);
-      vapi.off("call-start-success", onCallStartSuccess);
+      Object.entries(handlersRef.current).forEach(([event, handler]) => {
+        vapi.off(event, handler);
+      });
     };
   }, []);
 
@@ -225,106 +217,38 @@ const Agent = ({
 
   // Handle automatic redirect when interview ends
   useEffect(() => {
-    console.log(
-      "🔄 useEffect triggered - CallStatus:",
-      callStatus,
-      "Type:",
-      type,
-      "HasRedirected:",
-      hasRedirectedRef.current
-    );
-
-    // Prevent multiple redirects
-    if (hasRedirectedRef.current) {
-      console.log("⚠️ Already redirected, skipping...");
+    if (callStatus !== CallStatus.FINISHED || hasRedirectedRef.current) {
       return;
     }
 
-    if (callStatus !== CallStatus.FINISHED) {
-      console.log("⏳ Call not finished yet, waiting...");
+    if (!interviewId || type !== "interview") {
+      hasRedirectedRef.current = true;
+      router.push("/");
       return;
     }
 
-    console.log("✅ Call FINISHED detected!");
+    hasRedirectedRef.current = true;
 
-    const handleGenerateFeedback = async () => {
-      console.log("📝 handleGenerateFeedback called");
-      console.log("   - Messages count:", messages.length);
-      console.log("   - Type:", type);
-      console.log("   - InterviewId:", interviewId);
-      console.log("   - UserId:", userId);
-
-      // If type is interview and interviewId exists, always redirect to feedback page
-      if (type === "interview" && interviewId) {
-        console.log("🎯 Interview mode confirmed - generating feedback...");
-        setIsGeneratingFeedback(true);
-        hasRedirectedRef.current = true; // Mark that we're handling the redirect
-
-        try {
-          console.log("🔄 Calling createFeedback...");
-          const { success, feedbackId: id } = await createFeedback({
-            interviewId: interviewId!,
-            userId: userId!,
-            transcript: messages,
-            feedbackId,
-          });
-
-          console.log(
-            "✅ createFeedback completed - Success:",
-            success,
-            "FeedbackId:",
-            id
-          );
-          setIsGeneratingFeedback(false);
-
-          // Always redirect to feedback page for interviews
-          const redirectUrl = `/interview/${interviewId}/feedback`;
-          console.log("🚀 Redirecting to:", redirectUrl);
-          router.push(redirectUrl);
-        } catch (error) {
-          console.error("❌ Error generating feedback:", error);
-          setIsGeneratingFeedback(false);
-          // Still redirect to feedback page even if there's an error
-          const redirectUrl = `/interview/${interviewId}/feedback`;
-          console.log("🚀 Redirecting to (after error):", redirectUrl);
-          router.push(redirectUrl);
-        }
-      } else {
-        console.log("⚠️ Not interview mode or missing interviewId");
-        console.log("   - Type:", type, "Expected: 'interview'");
-        console.log("   - InterviewId:", interviewId);
+    const generateFeedbackAndRedirect = async () => {
+      setIsGeneratingFeedback(true);
+      try {
+        const { success } = await createFeedback({
+          interviewId,
+          userId,
+          transcript: messages,
+          feedbackId,
+        });
+        console.log("✅ Feedback generated:", success);
+      } catch (error) {
+        console.error("❌ Error generating feedback:", error);
+      } finally {
+        setIsGeneratingFeedback(false);
+        router.push(`/interview/${interviewId}/feedback`);
       }
     };
 
-    if (type === "generate") {
-      console.log("🏠 Generate mode detected");
-      console.log("   - Messages count:", messages.length);
-      console.log("   - InterviewId:", interviewId);
-
-      // If we have an interviewId in generate mode, treat it like an interview
-      if (interviewId) {
-        console.log(
-          "🎤 Generate mode but has InterviewId - treating as interview"
-        );
-        hasRedirectedRef.current = true;
-        handleGenerateFeedback();
-      } else {
-        console.log(
-          "🏠 Generate mode without InterviewId - redirecting to home"
-        );
-        hasRedirectedRef.current = true;
-        router.push("/");
-      }
-    } else if (type === "interview") {
-      console.log("🎤 Interview mode - starting feedback generation");
-      handleGenerateFeedback();
-    } else {
-      console.log("❓ Unknown type:", type);
-      // Fallback: if type is undefined or something else, still try to generate feedback
-      handleGenerateFeedback();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [callStatus, type, interviewId]);
+    generateFeedbackAndRedirect();
+  }, [callStatus, interviewId, type, messages, messages.length, feedbackId, userId, router]);
 
   const handleCall = async (config?: InterviewConfig) => {
     setCallStatus(CallStatus.CONNECTING);
@@ -394,7 +318,7 @@ const Agent = ({
 
           // Try to extract more specific error information
           if (error && typeof error === "object") {
-            const err = error as any;
+            const err = error as { response?: { status: number; statusText: string; data: unknown } };
             if (err.response) {
               console.error("Response error:", {
                 status: err.response.status,
@@ -739,6 +663,23 @@ const Agent = ({
           </button>
         )}
       </div>
+
+      {vapiError && (
+        <div className="fixed bottom-4 right-4 z-50 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg shadow-lg max-w-md animate-slideIn">
+          <div className="flex items-center gap-2">
+            <svg className="w-5 h-5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+            </svg>
+            <p className="text-sm font-medium">{vapiError}</p>
+            <button
+              onClick={() => setVapiError(null)}
+              className="ml-2 text-red-500 hover:text-red-700 font-bold"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Show generating feedback status or View Report button after interview ends */}
       {callStatus === CallStatus.FINISHED &&

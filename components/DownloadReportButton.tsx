@@ -5,15 +5,22 @@ import { Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import type { Feedback, Interview, QuestionEvaluation } from "@/types";
+
+// Type augmentation for jsPDF
+interface JsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: { finalY: number };
+  internal: {
+    getNumberOfPages: () => number;
+  };
+}
 
 interface DownloadReportButtonProps {
-  interviewId: string;
-  feedback: any;
-  interview: any;
+  feedback: Feedback;
+  interview: Interview;
 }
 
 export default function DownloadReportButton({
-  interviewId,
   feedback,
   interview,
 }: DownloadReportButtonProps) {
@@ -28,7 +35,7 @@ export default function DownloadReportButton({
     setIsGenerating(true);
 
     try {
-      const doc = new jsPDF();
+      const doc = new jsPDF() as JsPDFWithAutoTable;
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       let yPosition = 20;
@@ -68,7 +75,7 @@ export default function DownloadReportButton({
 
       // Helper function to add footer on each page
       const addFooter = (pageNum: number) => {
-        const totalPages = (doc as any).internal.getNumberOfPages();
+        const totalPages = doc.internal.getNumberOfPages();
         doc.setFillColor(37, 99, 235);
         doc.rect(0, pageHeight - 15, pageWidth, 15, "F");
 
@@ -204,7 +211,7 @@ export default function DownloadReportButton({
           margin: { left: 20, right: 20 },
         });
 
-        yPosition = (doc as any).lastAutoTable.finalY + 15;
+        yPosition = doc.lastAutoTable.finalY + 15;
       }
 
       // Question Evaluations Section (if new format)
@@ -218,7 +225,7 @@ export default function DownloadReportButton({
 
         yPosition += 10;
 
-        feedback.questionEvaluations.forEach((qEval: any, index: number) => {
+        feedback.questionEvaluations.forEach((qEval: QuestionEvaluation, index: number) => {
           checkPageBreak(50);
 
           doc.setFillColor(249, 250, 251);
@@ -359,7 +366,7 @@ export default function DownloadReportButton({
       }
 
       // Add footers to all pages
-      const totalPages = (doc as any).internal.getNumberOfPages();
+      const totalPages = doc.internal.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
         addFooter(i);

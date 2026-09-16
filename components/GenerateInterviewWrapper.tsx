@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Agent from "./Agent";
 
@@ -31,11 +31,24 @@ const GenerateInterviewWrapper = ({
       console.log("🔄 Creating interview record in database...");
 
       // Check for prefilled interview data
-      let interviewData: any = {
+      interface InterviewData {
+        role: string;
+        type: string;
+        level: string;
+        techstack: string;
+        amount: number;
+        userid: string;
+        subject: string;
+        year: string;
+        topics: string;
+        isTechnical?: boolean;
+      }
+
+      let interviewData: InterviewData = {
         role: "General Interview",
         type: "Quick Practice",
         level: "All Levels",
-        techstack: [],
+        techstack: "",
         amount: 5,
         userid: userId,
         subject: "General",
@@ -52,7 +65,7 @@ const GenerateInterviewWrapper = ({
             role: config.subject || "General Interview",
             type: config.type || "Quick Practice",
             level: config.year || "All Levels",
-            techstack: config.topics ? config.topics.split(", ") : [],
+            techstack: config.topics || "",
             amount: 5,
             userid: userId,
             subject: config.subject || "General",
@@ -77,24 +90,11 @@ const GenerateInterviewWrapper = ({
 
       const data = await response.json();
 
-      if (data.success) {
-        console.log("✅ Interview created successfully");
-
-        // Get the interview ID from the database
-        // Since the API doesn't return the ID, we need to fetch the latest interview
-        const latestInterviewResponse = await fetch(
-          `/api/interview/latest?userId=${userId}`
-        );
-
-        if (latestInterviewResponse.ok) {
-          const latestData = await latestInterviewResponse.json();
-          if (latestData.interviewId) {
-            console.log("✅ Got interview ID:", latestData.interviewId);
-            setInterviewId(latestData.interviewId);
-          }
-        }
+      if (data.success && data.interviewId) {
+        console.log("✅ Interview created successfully with ID:", data.interviewId);
+        setInterviewId(data.interviewId);
       } else {
-        setError("Failed to create interview. Please try again.");
+        setError(data.error || "Failed to create interview. Please try again.");
       }
     } catch (err) {
       console.error("❌ Error creating interview:", err);

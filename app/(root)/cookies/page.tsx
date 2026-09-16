@@ -1,5 +1,5 @@
 import React from "react";
-import { Cookie, Settings, Eye, Shield, Scale } from "lucide-react";
+import { Settings, Eye, Shield, Scale } from "lucide-react";
 import Link from "next/link";
 
 const CookiePolicyPage = () => {
@@ -247,19 +247,19 @@ const CookiePolicyPage = () => {
                 </p>
                 <ul className="list-disc list-inside space-y-1 text-gray-300">
                   <li>
-                    <strong>Chrome:</strong> Settings → Privacy and Security →
+                    <strong>Chrome:</strong> Settings > Privacy and Security >
                     Cookies
                   </li>
                   <li>
-                    <strong>Firefox:</strong> Settings → Privacy & Security →
+                    <strong>Firefox:</strong> Settings > Privacy & Security >
                     Cookies and Site Data
                   </li>
                   <li>
-                    <strong>Safari:</strong> Preferences → Privacy → Cookies and
+                    <strong>Safari:</strong> Preferences > Privacy > Cookies and
                     website data
                   </li>
                   <li>
-                    <strong>Edge:</strong> Settings → Cookies and site
+                    <strong>Edge:</strong> Settings > Cookies and site
                     permissions
                   </li>
                 </ul>
@@ -280,7 +280,7 @@ const CookiePolicyPage = () => {
 
               <div className="bg-yellow-900/20 border border-yellow-500/50 rounded-lg p-4">
                 <p className="text-yellow-300 font-semibold mb-2">
-                  ⚠️ Important Note:
+                  Important Note:
                 </p>
                 <p className="text-gray-300">
                   Disabling certain cookies may affect your experience and

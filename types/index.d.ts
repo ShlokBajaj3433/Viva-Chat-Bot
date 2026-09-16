@@ -1,40 +1,68 @@
+interface StudentInfo {
+  studentName: string;
+  subject: string;
+  year: string;
+  topics: string;
+  vivaType: string;
+  difficultyLevel: string;
+  dateTime: string;
+  totalQuestions: number;
+}
+
+interface QuestionEvaluation {
+  questionNumber: number;
+  question: string;
+  studentAnswer: string;
+  evaluation: string;
+  marksAwarded: number;
+  maxMarks: number;
+}
+
+interface PerformanceSummary {
+  totalMarks: number;
+  marksObtained: number;
+  percentage: number;
+  grade: string;
+  overallPerformance: string;
+}
+
+interface CommunicationInsights {
+  confidenceLevel: string;
+  clarityOfExplanation: string;
+  problemSolvingApproach: string;
+  useOfExamples: string;
+  engagementLevel: string;
+  detailedAnalysis: string;
+}
+
+interface CategoryScore {
+  name: string;
+  score: number;
+  comment: string;
+}
+
+interface FinalFeedback {
+  strengths: string[];
+  areasForImprovement: string[];
+  recommendation: string;
+  finalAssessment: string;
+}
+
 interface Feedback {
   id: string;
   interviewId: string;
+  userId: string;
+  studentInfo: StudentInfo;
+  questionEvaluations: QuestionEvaluation[];
+  performanceSummary: PerformanceSummary;
+  communicationInsights: CommunicationInsights;
+  finalFeedback: FinalFeedback;
+  categoryScores: CategoryScore[];
   totalScore: number;
-  categoryScores: Array<{
-    name: string;
-    score: number;
-    comment: string;
-  }>;
   strengths: string[];
   areasForImprovement: string[];
   finalAssessment: string;
   createdAt: string;
-  // New comprehensive structure fields
-  studentInfo?: any;
-  questionEvaluations?: Array<{
-    questionNumber: number;
-    question: string;
-    studentAnswer: string;
-    evaluation: string;
-    marksAwarded: number;
-    maxMarks: number;
-  }>;
-  performanceSummary?: {
-    totalMarks: number;
-    marksObtained: number;
-    percentage: number;
-    grade: string;
-    overallPerformance: string;
-  };
-  communicationInsights?: any;
-  finalFeedback?: {
-    strengths: string[];
-    areasForImprovement: string[];
-    recommendation: string;
-    finalAssessment: string;
-  };
 }
 
 interface Interview {
@@ -47,11 +75,11 @@ interface Interview {
   userId: string;
   type: string;
   finalized: boolean;
-  // Additional fields for viva interviews
   subject?: string;
   year?: string;
   topics?: string;
   bookmarked?: boolean;
+  coverImage?: string;
 }
 
 interface CreateFeedbackParams {
@@ -70,7 +98,7 @@ interface User {
 interface InterviewCardProps {
   interviewId?: string;
   userId?: string;
-  role: string; // This now contains the subject name
+  role: string;
   type: string;
   techstack: string[];
   createdAt?: string;
@@ -81,8 +109,8 @@ interface InterviewCardProps {
 
 interface AgentProps {
   userName: string;
-  userId?: string;
-  interviewId?: string;
+  userId: string;
+  interviewId: string;
   feedbackId?: string;
   type: "generate" | "interview";
   questions?: string[];
@@ -143,4 +171,19 @@ interface ProjectFeedback {
   comments?: string;
   submittedAt: string;
   status: string;
+}
+
+interface InterviewConfig {
+  subject?: string;
+  year?: string;
+  topics?: string;
+  type?: string;
+  role?: string;
+  level?: string;
+  techstack?: string;
+  isTechnical?: boolean;
+  numberOfQuestions?: number;
+  timeLimit?: number;
+  difficulty?: string;
+  focusArea?: string;
 }

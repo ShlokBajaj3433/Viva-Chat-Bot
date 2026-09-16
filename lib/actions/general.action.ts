@@ -5,6 +5,8 @@ import { google } from "@ai-sdk/google";
 
 import { db } from "@/firebase/admin";
 import { feedbackSchema } from "@/constants";
+import { GEMINI_MODEL } from "@/lib/env-validation";
+import type { Feedback, Interview, CreateFeedbackParams, GetFeedbackByInterviewIdParams, GetLatestInterviewsParams } from "@/types";
 
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId } = params;
@@ -27,7 +29,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
     const currentDate = new Date().toISOString();
 
     const { object } = await generateObject({
-      model: google("gemini-2.0-flash-001", {
+      model: google(GEMINI_MODEL, {
         structuredOutputs: false,
       }),
       schema: feedbackSchema,
@@ -200,25 +202,45 @@ export async function getLatestInterviews(
 ): Promise<Interview[] | null> {
   const { userId, limit = 20 } = params;
 
-  // Simplified query to avoid index requirements
-  const interviews = await db
-    .collection("interviews")
-    .where("finalized", "==", true)
-    .limit(limit * 2) // Get more to filter out user's own interviews
-    .get();
+  let interviewDocs;
 
-  // Filter and sort in memory to avoid complex index requirements
-  const allInterviews = interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
+  try {
+    const interviews = await db
+      .collection("interviews")
+      .where("finalized", "==", true)
+      .orderBy("createdAt", "desc")
+      .limit(limit * 3) // Get more to filter out user's own interviews
+      .get();
+
+    interviewDocs = interviews.docs;
+  } catch (error) {
+    // Keep the home page available while a newly added Firestore index is deploying.
+    if (
+      !(error instanceof Error) ||
+      !error.message.includes("FAILED_PRECONDITION")
+    ) {
+      throw error;
+    }
+
+    const interviews = await db
+      .collection("interviews")
+      .where("finalized", "==", true)
+      .get();
+
+    interviewDocs = interviews.docs.sort((first, second) => {
+      const firstCreatedAt = first.data().createdAt ?? "";
+      const secondCreatedAt = second.data().createdAt ?? "";
+
+      return String(secondCreatedAt).localeCompare(String(firstCreatedAt));
+    });
+  }
+
+  // Filter out user's own interviews in memory
+  const allInterviews = interviewDocs
+    .map((doc) => ({ id: doc.id, ...doc.data() })) as Interview[];
 
   const filteredInterviews = allInterviews
     .filter((interview: Interview) => interview.userId !== userId)
-    .sort(
-      (a: Interview, b: Interview) =>
-        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-    )
     .slice(0, limit);
 
   return filteredInterviews;
@@ -230,19 +252,10 @@ export async function getInterviewsByUserId(
   const interviews = await db
     .collection("interviews")
     .where("userId", "==", userId)
+    .orderBy("createdAt", "desc")
     .get();
 
-  // Sort in memory to avoid index requirements
-  const allInterviews = interviews.docs.map((doc) => ({
-    id: doc.id,
-    ...doc.data(),
-  })) as Interview[];
-
-  // Sort by createdAt descending
-  return allInterviews.sort(
-    (a: Interview, b: Interview) =>
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-  );
+  return interviews.docs.map((doc) => ({ id: doc.id, ...doc.data() })) as Interview[];
 }
 
 export async function toggleBookmark(

@@ -260,10 +260,10 @@ const CareersPage = () => {
 
         {/* Application CTA */}
         <div className="text-center bg-gray-800/50 rounded-2xl p-12 border border-gray-700">
-          <h2 className="text-3xl font-bold mb-4">Don't See a Perfect Fit?</h2>
+          <h2 className="text-3xl font-bold mb-4">Don&apos;t See a Perfect Fit?</h2>
           <p className="text-gray-300 mb-6 text-lg">
-            We're always looking for talented people. Send us your resume and
-            let's talk!
+            We&apos;re always looking for talented people. Send us your resume and
+            let&apos;s talk!
           </p>
           <a
             href="mailto:careers@vivachat.in"

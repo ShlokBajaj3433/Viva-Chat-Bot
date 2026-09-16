@@ -6,27 +6,15 @@ import { Calendar, Clock, FileText, Play, Eye, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import BookmarkButton from "@/components/BookmarkButton";
 import DownloadReportButton from "@/components/DownloadReportButton";
+import type { Feedback, Interview } from "@/types";
 
-interface Interview {
-  id: string;
-  subject: string;
-  date: string;
-  duration: string;
-  score: number;
-  status: string;
-  grade: string;
-  questions: number;
-  difficulty: string;
-  topics: string[];
-  year: string;
-  feedback: string;
-  type: string;
-  feedbackData: any;
-  interviewData: any;
+interface InterviewListItem extends Interview {
+  feedbackData: Feedback | null;
+  interviewData: Interview;
 }
 
 interface InterviewsListProps {
-  interviews: Interview[];
+  interviews: InterviewListItem[];
   userId: string;
 }
 

@@ -1,10 +1,43 @@
 import { generateText } from "ai";
 import { google } from "@ai-sdk/google";
+import { z } from "zod";
 
 import { db } from "@/firebase/admin";
 import { getRandomInterviewCover } from "@/lib/utils";
+import { GEMINI_MODEL } from "@/lib/env-validation";
+
+const generateSchema = z.object({
+  type: z.string().optional(),
+  role: z.string().optional(),
+  level: z.string().optional(),
+  techstack: z.string().optional(),
+  amount: z.number().min(1).max(50).default(10),
+  userid: z.string().min(1, "User ID required"),
+  subject: z.string().optional(),
+  year: z.string().optional(),
+  topics: z.string().optional(),
+  isTechnical: z.boolean().optional(),
+});
 
 export async function POST(request: Request) {
+  const body = await request.json();
+  const result = generateSchema.safeParse(body);
+  if (!result.success) {
+    const validationError = result.error.flatten();
+
+    return Response.json(
+      {
+        success: false,
+        error: Object.entries(validationError.fieldErrors)
+          .flatMap(([field, messages]) =>
+            (messages ?? []).map((message) => `${field}: ${message}`)
+          )
+          .join(" ") || validationError.formErrors.join(" ") || "Invalid interview data",
+      },
+      { status: 400 }
+    );
+  }
+
   const {
     type,
     role,
@@ -12,13 +45,11 @@ export async function POST(request: Request) {
     techstack,
     amount = 10,
     userid,
-    // new fields for vivas
     subject,
     year,
     topics,
-    // optional flag to prefer technical questions
     isTechnical,
-  } = await request.json();
+  } = result.data;
 
   const subjectVal = (subject ?? role ?? "General").toString();
   const yearVal = (year ?? level ?? "All Years").toString();
@@ -46,7 +77,7 @@ Instructions:
 
   try {
     const { text: questions } = await generateText({
-      model: google("gemini-2.0-flash-001"),
+      model: google(GEMINI_MODEL),
       prompt,
     });
 
@@ -92,10 +123,10 @@ Instructions:
       topics: topicsVal,
     };
 
-    await db.collection("interviews").add(interview);
+    const docRef = await db.collection("interviews").add(interview);
 
     return Response.json(
-      { success: true, questions: parsedQuestions },
+      { success: true, interviewId: docRef.id, questions: parsedQuestions },
       { status: 200 }
     );
   } catch (error) {

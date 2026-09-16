@@ -16,10 +16,11 @@ export async function setSessionCookie(idToken: string) {
   });
 
   // Set cookie in the browser
+  const isProduction = process.env.NODE_ENV === "production" || process.env.VERCEL_ENV === "production";
   cookieStore.set("session", sessionCookie, {
     maxAge: SESSION_DURATION,
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
+    secure: isProduction,
     path: "/",
     sameSite: "lax",
   });
@@ -49,11 +50,12 @@ export async function signUp(params: SignUpParams) {
       success: true,
       message: "Account created successfully. Please sign in.",
     };
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating user:", error);
 
     // Handle Firebase specific errors
-    if (error.code === "auth/email-already-exists") {
+    const err = error as { code?: string };
+    if (err.code === "auth/email-already-exists") {
       return {
         success: false,
         message: "This email is already in use",
@@ -79,8 +81,8 @@ export async function signIn(params: SignInParams) {
       };
 
     await setSessionCookie(idToken);
-  } catch (error: any) {
-    console.log("");
+  } catch (error) {
+    console.error("Sign in error:", error);
 
     return {
       success: false,

@@ -1,13 +1,13 @@
 import dayjs from "dayjs";
 import Link from "next/link";
-import Image from "next/image";
 import { Calendar, Star, GraduationCap, ArrowRight, Clock } from "lucide-react";
 
 import { Button } from "./ui/button";
 import DisplayTechIcons from "./DisplayTechIcons";
 
-import { cn, getRandomInterviewCover } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { getFeedbackByInterviewId } from "@/lib/actions/general.action";
+import type { InterviewCardProps } from "@/types";
 
 const InterviewCard = async ({
   interviewId,

@@ -3,10 +3,19 @@
 import { Button } from "@/components/ui/button";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
+import type { Feedback, Interview, QuestionEvaluation } from "@/types";
+
+// Type augmentation for jsPDF
+interface JsPDFWithAutoTable extends jsPDF {
+  lastAutoTable: { finalY: number };
+  internal: {
+    getNumberOfPages: () => number;
+  };
+}
 
 interface DownloadPDFButtonProps {
-  feedback: any;
-  interview: any;
+  feedback: Feedback;
+  interview: Interview;
   isNewFormat: boolean;
 }
 
@@ -16,7 +25,7 @@ export default function DownloadPDFButton({
   isNewFormat,
 }: DownloadPDFButtonProps) {
   const generatePDF = () => {
-    const doc = new jsPDF();
+    const doc = new jsPDF() as JsPDFWithAutoTable;
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
     let yPosition = 20;
@@ -61,7 +70,7 @@ export default function DownloadPDFButton({
 
     // Helper function to add footer on each page
     const addFooter = (pageNum: number) => {
-      const totalPages = (doc as any).internal.getNumberOfPages();
+      const totalPages = doc.internal.getNumberOfPages();
 
       // Footer background
       doc.setFillColor(37, 99, 235);
@@ -193,7 +202,7 @@ export default function DownloadPDFButton({
         margin: { left: 20, right: 20 },
       });
 
-      yPosition = (doc as any).lastAutoTable.finalY + 15;
+      yPosition = doc.lastAutoTable.finalY + 15;
     }
 
     // Question Evaluations Section
@@ -207,7 +216,7 @@ export default function DownloadPDFButton({
 
       yPosition += 10;
 
-      feedback.questionEvaluations.forEach((qEval: any, index: number) => {
+      feedback.questionEvaluations.forEach((qEval: QuestionEvaluation, index: number) => {
         checkPageBreak(60);
 
         // Question box
@@ -403,7 +412,7 @@ export default function DownloadPDFButton({
     }
 
     // Add footers to all pages
-    const totalPages = (doc as any).internal.getNumberOfPages();
+    const totalPages = doc.internal.getNumberOfPages();
     for (let i = 1; i <= totalPages; i++) {
       doc.setPage(i);
       addFooter(i);
