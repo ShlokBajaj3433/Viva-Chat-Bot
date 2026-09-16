@@ -1,0 +1,61 @@
+/* CSS Variables and Theme */
+:root {
+    /* Colors */
+    --bg-primary: #f5f5f5;
+    --bg-secondary: #ffffff;
+    --bg-dark: #2c3e50;
+    --text-primary: #333333;
+    --text-secondary: #666666;
+    --text-light: #ffffff;
+    --border-color: #cccccc;
+    --accent: #34495e;
+    --success: #27ae60;
+    --danger: #c0392b;
+    --warning: #f39c12;
+    --info: #3498db;
+
+    /* Spacing */
+    --spacing-xs: 5px;
+    --spacing-sm: 10px;
+    --spacing-md: 15px;
+    --spacing-lg: 20px;
+    --spacing-xl: 30px;
+
+    /* Border Radius */
+    --radius-sm: 3px;
+    --radius-md: 4px;
+
+    /* Shadows */
+    --shadow-sm: 0 2px 4px rgba(0,0,0,0.1);
+    --shadow-md: 0 4px 12px rgba(0,0,0,0.15);
+    --shadow-lg: 0 10px 40px rgba(0,0,0,0.3);
+
+    /* Transitions */
+    --transition-fast: 0.2s ease;
+    --transition-normal: 0.3s ease;
+
+    /* Sidebar */
+    --sidebar-width: 240px;
+    --sidebar-collapsed-width: 60px;
+
+    /* Font */
+    --font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    --font-size-xs: 11px;
+    --font-size-sm: 12px;
+    --font-size-base: 14px;
+    --font-size-md: 16px;
+    --font-size-lg: 18px;
+    --font-size-xl: 20px;
+    --font-size-xxl: 24px;
+    --font-size-stat: 32px;
+}
+
+/* Dark Theme Variables */
+[data-theme="dark"] {
+    --bg-primary: #1a1a2e;
+    --bg-secondary: #16213e;
+    --bg-dark: #0f0f1a;
+    --text-primary: #e4e4e4;
+    --text-secondary: #a0a0a0;
+    --border-color: #333355;
+}

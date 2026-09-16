@@ -1,0 +1,41 @@
+<!-- Announcements Page -->
+<div class="content">
+    <div class="panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-bullhorn"></i> Announcements Management</h3>
+            <button class="btn btn-primary" onclick="openModal('announcement')">
+                <i class="fas fa-plus"></i> Add Announcement
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="search-box">
+                <input type="text" class="form-control" id="search-announcements" placeholder="Search announcements...">
+                <button class="btn" onclick="loadAnnouncements()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Author</th>
+                            <th>Target</th>
+                            <th>Date</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="announcements-table">
+                        <tr>
+                            <td colspan="6" class="loading">
+                                <div class="loading-spinner"></div>
+                                Loading announcements...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>

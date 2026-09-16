@@ -1,0 +1,73 @@
+<!-- Settings Page -->
+<div class="content">
+    <!-- API Settings -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-plug"></i> API Configuration</h3>
+        </div>
+        <div class="panel-body">
+            <form id="settings-form">
+                <div class="form-group">
+                    <label for="api-url">API Base URL</label>
+                    <input type="text" class="form-control" id="api-url" value="http://localhost:8080">
+                    <p class="form-help">The base URL for the backend API server.</p>
+                </div>
+                <div class="form-group">
+                    <label for="theme-select">Theme</label>
+                    <select class="form-control" id="theme-select">
+                        <option value="light">Light (Default)</option>
+                        <option value="dark">Dark</option>
+                    </select>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-primary" onclick="saveSettings()">
+                        <i class="fas fa-save"></i> Save Settings
+                    </button>
+                    <button type="button" class="btn" onclick="resetSettings()">
+                        <i class="fas fa-undo"></i> Reset to Defaults
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Data Management -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-database"></i> Data Management</h3>
+        </div>
+        <div class="panel-body">
+            <p>Export all data from the system for backup or migration purposes.</p>
+            <button class="btn btn-primary" onclick="exportData()">
+                <i class="fas fa-download"></i> Export Data as JSON
+            </button>
+        </div>
+    </div>
+
+    <!-- About -->
+    <div class="panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-info-circle"></i> About</h3>
+        </div>
+        <div class="panel-body">
+            <table class="system-status">
+                <tr>
+                    <td><strong>Application</strong></td>
+                    <td>VIVA Admin Panel</td>
+                </tr>
+                <tr>
+                    <td><strong>Version</strong></td>
+                    <td>1.0.0</td>
+                </tr>
+                <tr>
+                    <td><strong>Description</strong></td>
+                    <td>Teacher and Administrator Portal for VIVA AI Mock Interview Platform</td>
+                </tr>
+                <tr>
+                    <td><strong>Backend</strong></td>
+                    <td>Spring Boot 4.0.1 with Firebase</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+</div>

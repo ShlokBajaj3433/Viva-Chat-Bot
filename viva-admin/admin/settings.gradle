@@ -1,0 +1,13 @@
+pluginManagement {
+	repositories {
+		gradlePluginPortal()
+		mavenCentral()
+	}
+}
+
+plugins {
+	// Automatically resolve and provision JDK toolchains (Temurin via Foojay)
+	id 'org.gradle.toolchains.foojay-resolver-convention' version '0.9.0'
+}
+
+rootProject.name = 'admin'

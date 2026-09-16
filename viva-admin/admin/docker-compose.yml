@@ -1,0 +1,23 @@
+version: '3.8'
+
+services:
+  viva-admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: viva-admin-portal
+    ports:
+      - "8080:8080"
+    environment:
+      - SPRING_PROFILES_ACTIVE=production
+      - JAVA_OPTS=-Xmx512m -Xms256m
+    volumes:
+      # Mount firebase credentials (update path as needed)
+      - ./firebase-service-account.json:/app/firebase-service-account.json:ro
+    restart: unless-stopped
+    networks:
+      - viva-network
+
+networks:
+  viva-network:
+    driver: bridge

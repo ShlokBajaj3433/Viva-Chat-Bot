@@ -1,0 +1,55 @@
+plugins {
+	id 'java'
+	id 'org.springframework.boot' version '4.0.1'
+	id 'io.spring.dependency-management' version '1.1.7'
+}
+
+group = 'com.example'
+version = '0.0.1-SNAPSHOT'
+description = 'Teacher Panel '
+
+java {
+	toolchain {
+		languageVersion = JavaLanguageVersion.of(17)
+	}
+}
+
+configurations {
+	compileOnly {
+		extendsFrom annotationProcessor
+	}
+}
+
+repositories {
+	mavenCentral()
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-security'
+	implementation 'org.springframework.boot:spring-boot-starter-validation'
+	implementation 'org.springframework.boot:spring-boot-starter-webmvc'
+	// AOP support for role-based authorization
+	implementation 'org.springframework:spring-aop:6.2.1'
+	implementation 'org.aspectj:aspectjweaver:1.9.22'
+	// Load .env files
+	implementation 'io.github.cdimascio:dotenv-java:3.0.0'
+	// Firebase Admin SDK for Java (Firestore, Auth, etc.)
+	implementation 'com.google.firebase:firebase-admin:9.2.0'
+	// JWT Token generation and validation
+	implementation 'io.jsonwebtoken:jjwt-api:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.12.3'
+	runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.12.3'
+	// Apache POI for Excel file processing
+	implementation 'org.apache.poi:poi:5.2.5'
+	implementation 'org.apache.poi:poi-ooxml:5.2.5'
+	// BCrypt for password hashing
+	implementation 'org.springframework.security:spring-security-crypto'
+	compileOnly 'org.projectlombok:lombok'
+	developmentOnly 'org.springframework.boot:spring-boot-devtools'
+	annotationProcessor 'org.projectlombok:lombok'
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+}
+
+tasks.named('test') {
+	useJUnitPlatform()
+}

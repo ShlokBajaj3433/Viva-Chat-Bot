@@ -1,0 +1,125 @@
+/* Dashboard Page Styles */
+
+/* Section Visibility */
+.section {
+    display: none;
+}
+
+.section.active {
+    display: block;
+}
+
+/* Dashboard Stats */
+.dashboard-stats {
+    margin-bottom: var(--spacing-xl);
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: var(--spacing-sm);
+    flex-wrap: wrap;
+}
+
+/* Activity List */
+.activity-list {
+    list-style: none;
+}
+
+.activity-item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--spacing-md);
+    padding: var(--spacing-md) 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.activity-item:last-child {
+    border-bottom: none;
+}
+
+.activity-icon {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background-color: var(--bg-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.activity-icon i {
+    font-size: var(--font-size-base);
+    color: var(--text-secondary);
+}
+
+.activity-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.activity-content p {
+    margin: 0;
+    font-size: var(--font-size-base);
+}
+
+.activity-content .time {
+    font-size: var(--font-size-sm);
+    color: var(--text-secondary);
+    margin-top: 2px;
+}
+
+/* Status Indicators */
+.status-indicator {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--text-secondary);
+}
+
+.status-dot.online {
+    background-color: var(--success);
+}
+
+.status-dot.offline {
+    background-color: var(--danger);
+}
+
+.status-dot.pending {
+    background-color: var(--warning);
+}
+
+/* System Status Table */
+.system-status td {
+    padding: var(--spacing-sm) 0;
+}
+
+.system-status td:first-child {
+    font-weight: 500;
+}
+
+/* Welcome Banner */
+.welcome-banner {
+    background: linear-gradient(135deg, var(--bg-dark) 0%, var(--accent) 100%);
+    color: var(--text-light);
+    padding: var(--spacing-xl);
+    border-radius: var(--radius-md);
+    margin-bottom: var(--spacing-xl);
+}
+
+.welcome-banner h2 {
+    color: var(--text-light);
+    margin-bottom: var(--spacing-sm);
+}
+
+.welcome-banner p {
+    opacity: 0.9;
+    margin: 0;
+}

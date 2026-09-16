@@ -1,7 +1,41 @@
-# 🎓 VivaChat — AI-Powered Mock Interview Platform
+# VivaChat — Student And Viva Portals
 
-**VivaChat** is an AI-powered platform designed to help students master viva voce (oral examinations) through intelligent mock interviews.  
-Practice with 50+ engineering subjects using voice-enabled AI assistants powered by **Vapi AI** and **Google Gemini**.
+This repository contains two separate applications: the student practice portal and the teacher/admin viva portal. They share the Firebase backend but have independent source trees, dependencies, and run commands.
+
+## Repository Structure
+
+```text
+Viva-Chat-Bot/
+	ai_mock_interviews/   # Student Next.js portal
+	viva-admin/admin/      # Teacher/admin Spring Boot portal
+	ENVIRONMENT_SETUP.md
+	FIREBASE_FIX_SUMMARY.md
+	README.md
+```
+
+## Student Portal
+
+The student portal provides AI-powered voice viva practice, interview history, classroom assignments, and feedback reports.
+
+```bash
+cd ai_mock_interviews
+npm install
+cp .env.example .env.local
+npm run dev
+```
+
+Open `http://localhost:3000`.
+
+## Teacher/Admin Portal
+
+The admin portal manages teachers, students, classrooms, assignments, announcements, and bulk uploads.
+
+```bash
+cd viva-admin/admin
+./gradlew bootRun
+```
+
+On Windows, use `gradlew.bat bootRun`.
 
 [![Live Demo](https://img.shields.io/badge/Live_Demo-Vercel-blue?style=for-the-badge)](https://viva-chat-bot.vercel.app/)
 [![Report Bug](https://img.shields.io/badge/Report-Bug-red?style=for-the-badge)](https://github.com/ShlokBajaj3433/Viva-Chat-Bot/issues)
@@ -114,15 +148,15 @@ Ensure the following are installed:
 ```bash
 # Clone the repository
 git clone https://github.com/ShlokBajaj3433/Viva-Chat-Bot.git
-cd Viva-Chat-Bot
+cd Viva-Chat-Bot/ai_mock_interviews
 
-# Install dependencies
+# Install student portal dependencies
 npm install
 
-# Create environment file
+# Create the student portal environment file
 cp .env.example .env.local
 
-# Run the development server
+# Run the student portal
 npm run dev
 ```
 
@@ -151,31 +185,6 @@ FIREBASE_CLIENT_EMAIL=your_firebase_client_email
 FIREBASE_PRIVATE_KEY=your_firebase_private_key
 
 # Vapi AI
-
-NEXT_PUBLIC_VAPI_PUBLIC_KEY=your_vapi_public_key
-VAPI_PRIVATE_KEY=your_vapi_private_key
-
-# Google Gemini
-
-GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key
-
-```
-
-**App Config:**
-- `NEXT_PUBLIC_APP_URL` — Set to `http://localhost:3000` for local development
-
----
-
-## 🗝️ Getting API Keys
-
-### 🔹 Firebase
-1. Go to [Firebase Console](https://console.firebase.google.com/)
-2. Create a new project
-3. Enable Authentication (Email/Password) and Cloud Firestore
-4. Copy your Firebase config from Project Settings
-
-### 🔹 Vapi AI
-1. Sign up at [Vapi.ai](https://vapi.ai/)
 2. Get your API keys from the dashboard
 3. Create voice assistants for interviews
 
@@ -211,3 +220,100 @@ GOOGLE_GENERATIVE_AI_API_KEY=your_gemini_api_key
 Built with ❤️ by Shlok Bajaj
 
 </div>
+=======
+# VIVA - Interview Practice Platform
+
+A comprehensive platform for conducting mock interviews with AI-powered assessment and admin management.
+
+## 📁 Project Structure
+
+### 🎓 [`ai_mock_interviews/`](ai_mock_interviews)
+**Next.js Student Portal** - Interactive interview practice platform
+- Student authentication & profile management
+- AI-powered mock interviews with real-time feedback
+- Past interview history and performance analytics
+- Dashboard with leaderboard and statistics
+- **Tech Stack:** Next.js, React, TypeScript, Firebase
+
+### 👨‍💼 [`viva-admin/admin/`](viva-admin/admin)
+**Spring Boot Admin Panel** - Complete administration system
+- User management (Students, Teachers, Admins)
+- Classroom and assignment management
+- Bulk student upload via Excel
+- Teacher assignment and performance tracking
+- Role-based access control (RBAC)
+- **Tech Stack:** Spring Boot, Java 17, Firebase Firestore
+
+---
+
+## 🚀 Quick Start
+
+### Backend (Admin Panel)
+```bash
+cd viva-admin/admin
+./gradlew bootRun
+# Runs on http://localhost:8080
+```
+
+### Frontend (Student Portal)
+```bash
+cd ai_mock_interviews
+npm install
+npm run dev
+# Runs on http://localhost:3000
+```
+
+---
+
+## 📚 Documentation
+
+- **[Admin Portal Setup](viva-admin/admin/README.md)** - Backend configuration and API docs
+- **[Environment Setup](ENVIRONMENT_SETUP.md)** - Firebase & credential configuration
+- **[Deployment Guide](DEPLOYMENT_GUIDE.md)** - Deploy to production
+- **[Database Schema](viva-admin/admin/FIRESTORE_SCHEMA.md)** - Data structure and relationships
+
+---
+
+## 🔐 Security
+
+- JWT authentication with 24-hour token expiration
+- Role-based access control (RBAC)
+- Firestore security rules
+- Encrypted password storage (BCrypt)
+- **Never commit:** `.env`, `firebase-service-account.json`
+
+---
+
+## 📋 Features
+
+✅ Student registration & management
+✅ AI-powered mock interviews
+✅ Classroom organization
+✅ Bulk student upload (Excel)
+✅ Teacher assignment & tracking
+✅ Performance analytics & leaderboard
+✅ Multi-role user system (Admin, Teacher, Student)
+✅ Real-time feedback & assessment
+
+---
+
+## 🛠️ Tech Stack
+
+| Component | Technology |
+|-----------|-----------|
+| Frontend | Next.js 14, React, TypeScript |
+| Backend | Spring Boot 4.0, Java 17 |
+| Database | Firebase Firestore |
+| Auth | Firebase Auth + JWT |
+| Deployment | Vercel (frontend), Cloud Run (backend) |
+
+---
+
+## 📞 Support
+
+For setup issues, refer to [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md)
+
+---
+
+**Ready to deploy?** See [Deployment Guide](DEPLOYMENT_GUIDE.md)
+>>>>>>> origin/main

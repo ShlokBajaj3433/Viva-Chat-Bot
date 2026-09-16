@@ -1,0 +1,41 @@
+<!-- Assignments Page -->
+<div class="content">
+    <div class="panel">
+        <div class="panel-header">
+            <h3><i class="fas fa-tasks"></i> Assignments Management</h3>
+            <button class="btn btn-primary" onclick="openModal('assignment')">
+                <i class="fas fa-plus"></i> Add Assignment
+            </button>
+        </div>
+        <div class="panel-body">
+            <div class="search-box">
+                <input type="text" class="form-control" id="search-assignments" placeholder="Search assignments by title...">
+                <button class="btn" onclick="loadAssignments()">
+                    <i class="fas fa-sync"></i> Refresh
+                </button>
+            </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Title</th>
+                            <th>Classroom</th>
+                            <th>Due Date</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="assignments-table">
+                        <tr>
+                            <td colspan="6" class="loading">
+                                <div class="loading-spinner"></div>
+                                Loading assignments...
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
