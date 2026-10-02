@@ -211,7 +211,16 @@ export const feedbackSchema = z.object({
       evaluation: z.string(),
       marksAwarded: z.number(),
       maxMarks: z.number(),
-      educationalReferences: z.array(z.string()).describe("Array of educational references in format: 'Platform: Topic - URL - Description'"),
+      // Legacy format (string-based for backward compatibility)
+      educationalReferences: z.array(z.string()).describe("Array of educational references in format: 'Platform: Topic - URL - Description'").optional(),
+      // New structured format (typed objects)
+      referenceLinks: z.array(
+        z.object({
+          title: z.string(),
+          url: z.string(),
+          source: z.string(),
+        })
+      ).optional(),
     })
   ),
 

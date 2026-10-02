@@ -1,3 +1,9 @@
+interface ReferenceLink {
+  title: string;
+  url: string;
+  source: string;
+}
+
 interface Feedback {
   id: string;
   interviewId: string;
@@ -21,7 +27,10 @@ interface Feedback {
     evaluation: string;
     marksAwarded: number;
     maxMarks: number;
+    // Legacy format (string-based for backward compatibility)
     educationalReferences?: string[];
+    // New structured format (typed objects)
+    referenceLinks?: ReferenceLink[];
   }>;
   performanceSummary?: {
     totalMarks: number;

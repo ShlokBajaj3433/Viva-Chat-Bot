@@ -106,11 +106,23 @@ For EACH SUBJECT-RELATED question in the transcript:
   * Correctness (0-2 points)
   * Depth of understanding (0-2 points)
   * Clarity and communication (0-1 point)
-- **Provide Educational References**: For each question, include 1-3 learning resources as strings in this EXACT format:
+- **Provide Educational References (Legacy Format)**: For each question, include 1-3 learning resources as strings in this EXACT format:
   * Format: "Platform: Topic - URL - Description"
   * Example: "GeeksforGeeks: Arrays in Data Structures - https://www.geeksforgeeks.org/array-data-structure/ - Comprehensive guide covering array concepts and operations"
   * **Trusted Platforms Only**: GeeksforGeeks (GFG), TutorialsPoint, W3Schools, MDN Web Docs, JavaTpoint, Programiz
   * URLs must be direct topic links (not homepage); include a topic path/slug
+- **Provide Reference Links (New Structured Format)**: For each question, also provide 1-3 reference links as structured objects:
+  * Each link object has: title (string), url (string), source (string)
+  * Generate TOPIC-SPECIFIC URLs, not homepage URLs
+  * For GeeksforGeeks: Use format like "https://www.geeksforgeeks.org/[specific-topic-slug]/"
+  * For TutorialsPoint: Use format like "https://www.tutorialspoint.com/[subject]/[specific-topic].htm"
+  * For MDN (web topics): Use format like "https://developer.mozilla.org/en-US/docs/Web/[topic]"
+  * For W3Schools: Use format like "https://www.w3schools.com/[topic]/"
+  * Example: For "Binary Search Tree" → "https://www.geeksforgeeks.org/binary-search-tree-data-structure/"
+  * Example: For "TCP/IP Protocol" → "https://www.tutorialspoint.com/data_communication_computer_network/tcp_ip_protocol.htm"
+  * **CRITICAL**: Construct URLs based on the actual topic/concept being discussed, using proper URL slugs
+  * Include a descriptive title for each link (e.g., "Binary Search Tree - GeeksforGeeks")
+  * Provide source name (e.g., "GeeksforGeeks", "TutorialsPoint", "MDN Web Docs")
 
 ### 3️⃣ Performance Summary
 Calculate based ONLY on subject-related questions:
