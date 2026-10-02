@@ -5,6 +5,7 @@ import { google } from "@ai-sdk/google";
 
 import { db } from "@/firebase/admin";
 import { feedbackSchema } from "@/constants";
+import { GEMINI_MODEL } from "@/lib/env-validation";
 
 export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId, duration } = params;
@@ -61,7 +62,7 @@ export async function createFeedback(params: CreateFeedbackParams) {
     const currentDate = new Date().toISOString();
 
     const { object } = await generateObject({
-      model: google("gemini-2.5-flash-lite"),
+      model: google(GEMINI_MODEL),
       schema: feedbackSchema,
       prompt: `
 You are an intelligent Viva Evaluation Assistant responsible for generating a professional viva/interview report based on the conversation transcript.

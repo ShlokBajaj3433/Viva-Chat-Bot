@@ -141,39 +141,19 @@ const GenerateInterviewWrapper = ({
       if (data.success) {
         console.log("✅ Interview created successfully");
 
-        // Get the interview ID from the database
-        // Since the API doesn't return the ID, we need to fetch the latest interview
-        console.log("🔍 Fetching latest interview ID...");
-        const latestInterviewResponse = await fetch(
-          `/api/interview/latest?userId=${userId}`
-        );
-
-        if (latestInterviewResponse.ok) {
-          const latestData = await latestInterviewResponse.json();
-          if (latestData.interviewId) {
-            console.log("✅ Got interview ID:", latestData.interviewId);
-            
-            // Clean up sessionStorage
-            if (typeof window !== "undefined") {
-              sessionStorage.removeItem("prefilledInterview");
-              console.log("🧹 Cleared sessionStorage");
-            }
-
-            // Redirect to the interview page with the ID
-            const interviewPageUrl = `/interview/${latestData.interviewId}`;
-            console.log("🔗 Redirecting to:", interviewPageUrl);
-            router.push(interviewPageUrl);
-          } else {
-            console.error("❌ No interviewId in latest response");
-            setError("Interview created but couldn't load it. Please refresh.");
-          }
-        } else {
-          console.error("❌ Failed to fetch latest interview");
-          setError("Interview created but couldn't be loaded. Please refresh.");
+        if (!data.interviewId) {
+          setError("Interview created but couldn't load it. Please refresh.");
+          return;
         }
+
+        if (typeof window !== "undefined") {
+          sessionStorage.removeItem("prefilledInterview");
+        }
+
+        router.push(`/interview/${data.interviewId}`);
       } else {
         console.error("❌ API returned success:false", data);
-        setError(data.message || "Failed to create interview. Please try again.");
+        setError(data.error || data.message || "Failed to create interview. Please try again.");
       }
     } catch (err) {
       console.error("❌ CREATE_INTERVIEW Error:", err);
