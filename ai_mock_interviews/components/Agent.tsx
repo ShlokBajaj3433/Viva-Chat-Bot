@@ -123,9 +123,43 @@ const Agent = ({
   const [interviewConfig, setInterviewConfig] = useState<InterviewConfig>({});
   const [isGeneratingFeedback, setIsGeneratingFeedback] = useState(false);
   const hasRedirectedRef = useRef(false); // Track if we've already redirected
-  const [elapsedTime, setElapsedTime] = useState(0); // Timer in seconds
-  const [interviewStartTime, setInterviewStartTime] = useState<number | null>(null);
-  const timerIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [micPermission, setMicPermission] = useState<"unknown" | "granted" | "denied">("unknown");
+
+  const checkMicrophonePermission = async (): Promise<boolean> => {
+    try {
+      if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        return false;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      setMicPermission("granted");
+      return true;
+    } catch (error) {
+      console.error("Microphone permission check failed:", error);
+      setMicPermission("denied");
+      return false;
+    }
+  };
+
+  const testMicrophone = async () => {
+    const hasPermission = await checkMicrophonePermission();
+    if (hasPermission) {
+      alert("✅ Microphone is working correctly! You can now start the interview.");
+    } else {
+      alert(
+        "❌ Microphone access denied or not available.\n\n" +
+        "Please:\n" +
+        "1. Click the microphone icon in your browser's address bar\n" +
+        "2. Select 'Allow' for microphone access\n" +
+        "3. Refresh this page and try again"
+      );
+    }
+  };
+
+  useEffect(() => {
+    checkMicrophonePermission();
+  }, []);
 
   console.log(
     "Agent Component Rendered - Type:",
@@ -282,8 +316,25 @@ const Agent = ({
         hasRedirectedRef.current = true; // Mark that we're handling the redirect
 
         try {
+          // Validate that we have meaningful content before generating feedback
+          const meaningfulMessages = messages.filter((msg: any) => {
+            const content = msg.content?.toLowerCase() || '';
+            const isGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|how are you|what's your name|tell me about yourself|are you ready)/i.test(content.trim());
+            return msg.role === 'user' && !isGreeting && content.length > 10;
+          }).length;
+
+          console.log(`📊 Meaningful answers: ${meaningfulMessages} (minimum 3 required)`);
+
+          if (meaningfulMessages < 3) {
+            console.warn("⚠️ Insufficient answers - redirecting to feedback page to show error");
+            setIsGeneratingFeedback(false);
+            const redirectUrl = `/interview/${interviewId}/feedback`;
+            router.push(redirectUrl);
+            return;
+          }
+
           console.log("🔄 Calling createFeedback...");
-          const { success, feedbackId: id } = await createFeedback({
+          const result = await createFeedback({
             interviewId: interviewId!,
             userId: userId!,
             transcript: messages,
@@ -293,20 +344,27 @@ const Agent = ({
 
           console.log(
             "✅ createFeedback completed - Success:",
-            success,
+            result.success,
             "FeedbackId:",
-            id
+            result.feedbackId
           );
+
+          // Check if feedback generation failed due to validation
+          if (!result.success && result.error) {
+            console.warn("⚠️ Feedback generation failed:", result.error);
+          }
+
           setIsGeneratingFeedback(false);
 
           // Always redirect to feedback page for interviews
+          // The feedback page will handle showing appropriate messages
           const redirectUrl = `/interview/${interviewId}/feedback`;
           console.log("🚀 Redirecting to:", redirectUrl);
           router.push(redirectUrl);
         } catch (error) {
           console.error("❌ Error generating feedback:", error);
           setIsGeneratingFeedback(false);
-          // Still redirect to feedback page even if there's an error
+          // Still redirect to feedback page - it will show appropriate error
           const redirectUrl = `/interview/${interviewId}/feedback`;
           console.log("🚀 Redirecting to (after error):", redirectUrl);
           router.push(redirectUrl);
@@ -352,6 +410,29 @@ const Agent = ({
     setCallStatus(CallStatus.CONNECTING);
 
     try {
+      if (
+        typeof window === "undefined" ||
+        !window.isSecureContext ||
+        typeof window.RTCPeerConnection === "undefined"
+      ) {
+        throw new Error(
+          "Voice interviews require a browser with WebRTC enabled. Open this app in Chrome or Edge at http://localhost:3000 and allow microphone access."
+        );
+      }
+
+      const hasMicPermission = await checkMicrophonePermission();
+      if (!hasMicPermission) {
+        throw new Error(
+          "Microphone access is required for voice interviews. Please allow microphone access in your browser settings and try again."
+        );
+      }
+
+      if (type === "interview" && !interviewId) {
+        throw new Error(
+          "Interview ID is required for interview mode. Please navigate to the interview page properly."
+        );
+      }
+
       const workflowId = process.env.NEXT_PUBLIC_VAPI_WORKFLOW_ID?.trim();
       const webToken = process.env.NEXT_PUBLIC_VAPI_WEB_TOKEN?.trim();
 
@@ -375,7 +456,22 @@ const Agent = ({
           };
         }
 
+        let onWorkflowStartFailed: ((event: unknown) => void) | undefined;
+
         try {
+          let startFailure: VapiErrorInfo | undefined;
+          onWorkflowStartFailed = (event: unknown) => {
+            const eventRecord =
+              event && typeof event === "object"
+                ? (event as Record<string, unknown>)
+                : undefined;
+            startFailure = extractVapiErrorInfo(eventRecord?.error ?? event);
+            if (eventRecord?.errorStack && !startFailure.stack) {
+              startFailure.stack = String(eventRecord.errorStack);
+            }
+          };
+
+          vapi.on("call-start-failed", onWorkflowStartFailed);
           console.log("Starting VAPI workflow with:", {
             workflowId,
             variables: Object.keys(variables || {}).reduce((acc, key) => {
@@ -396,16 +492,22 @@ const Agent = ({
               : undefined
           );
 
+          vapi.off("call-start-failed", onWorkflowStartFailed);
+
           if (!call) {
             return {
               ok: false as const,
               reason: "start-returned-null" as const,
+              error: startFailure,
             };
           }
 
           console.log("VAPI workflow started successfully");
           return { ok: true as const };
         } catch (error) {
+          if (onWorkflowStartFailed) {
+            vapi.off("call-start-failed", onWorkflowStartFailed);
+          }
           const errorInfo = extractVapiErrorInfo(error);
           console.error("Failed to start Vapi workflow", {
             error,
@@ -468,13 +570,13 @@ const Agent = ({
           if (result.reason === "missing-workflow-id") {
             console.error("VAPI_WORKFLOW_ID is not configured");
             alert(
-              "VAPI Workflow ID is not configured. Please check your environment variables."
+              "VAPI Workflow ID is not configured. Please check your environment variables or contact support."
             );
           } else {
-            let errorMessage = "Unable to start the VAPI workflow. ";
+            let errorMessage = "";
 
             if (result.error?.status === 400) {
-              errorMessage +=
+              errorMessage =
                 "The workflow configuration is invalid. Please check:\n" +
                 "1. VAPI_WORKFLOW_ID is correct\n" +
                 "2. The workflow exists in your VAPI dashboard\n" +
@@ -483,14 +585,21 @@ const Agent = ({
               result.error?.status === 401 ||
               result.error?.status === 403
             ) {
-              errorMessage +=
+              errorMessage =
                 "Authentication failed. Please check your VAPI_WEB_TOKEN.\n\n";
+            } else if (result.error?.status === 429) {
+              errorMessage =
+                "Rate limit exceeded. Please wait a moment and try again.\n\n";
+            } else if (result.reason === "start-returned-null") {
+              errorMessage =
+                "The VAPI workflow did not return a call. This may be a temporary issue.\n\n";
             }
 
             errorMessage +=
-              result.error?.message || "Check the browser console for details.";
+              result.error?.message ??
+              "Starting the VAPI workflow failed. Check the browser console for details.";
 
-            console.error("Full error details:", result.error);
+            console.error("VAPI workflow start failed:", { result, error: result.error });
             alert(errorMessage);
           }
           setCallStatus(CallStatus.INACTIVE);
@@ -561,69 +670,75 @@ const Agent = ({
         topics: config?.topics || "",
         type: config?.type || "",
         isTechnical: config?.isTechnical ?? false,
+        interviewId,
       });
 
       if (!result.ok) {
         if (result.reason === "missing-workflow-id") {
           console.error("VAPI_WORKFLOW_ID is not configured");
           alert(
-            "VAPI Workflow ID is not configured. Please check your environment variables."
+            "VAPI Workflow ID is not configured. Please check your environment variables or contact support."
           );
           setCallStatus(CallStatus.INACTIVE);
           return;
         }
 
-        let fallbackMessage = "";
+        let errorMessage = "";
 
         if (result.error?.status === 400) {
-          fallbackMessage =
+          errorMessage =
             "The workflow configuration is invalid. Please check:\n" +
             "1. VAPI_WORKFLOW_ID is correct\n" +
             "2. The workflow exists in your VAPI dashboard\n" +
-            "3. The workflow variables (questions, username, userid, interviewId) match what the workflow expects\n\n";
+            "3. The workflow variables match what the workflow expects\n\n";
         } else if (
           result.error?.status === 401 ||
           result.error?.status === 403
         ) {
-          fallbackMessage =
+          errorMessage =
             "Authentication failed. Please check your VAPI_WEB_TOKEN.\n\n";
+        } else if (result.error?.status === 429) {
+          errorMessage =
+            "Rate limit exceeded. Please wait a moment and try again.\n\n";
+        } else if (result.reason === "start-returned-null") {
+          errorMessage =
+            "The VAPI workflow did not return a call. This may be a temporary issue.\n\n";
         }
 
-        fallbackMessage +=
+        errorMessage +=
           result.error?.message ??
-          (result.reason === "start-returned-null"
-            ? "Starting the VAPI workflow returned no call."
-            : "Starting the VAPI workflow failed.");
+          "Starting the VAPI workflow failed. Check the browser console for details.";
 
-        console.warn(
-          "Falling back to the default interviewer due to workflow start failure",
-          {
-            result,
-            variables: {
-              questions: formattedQuestions?.substring(0, 100) + "...",
-              username: userName,
-              userid: userId,
-              interviewId,
-            },
-          }
-        );
+        console.error("VAPI workflow start failed:", { result, error: result.error });
 
-        alert(fallbackMessage + "\n\nFalling back to the default interviewer.");
-
-        await vapi.start(interviewer, {
-          variableValues: {
-            questions: formattedQuestions,
-          },
-        });
+        alert(errorMessage);
+        setCallStatus(CallStatus.INACTIVE);
+        return;
       }
     } catch (err) {
       console.error("Error starting VAPI call:", err);
-      // print non-enumerable props
-      console.error(
-        "Error details:",
-        JSON.stringify(err, Object.getOwnPropertyNames(err))
-      );
-      alert("Error starting call. Check console/network for details.");
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      
+      if (errorMessage.includes("Microphone access is required") || 
+          errorMessage.includes("permission") || 
+          errorMessage.includes("NotAllowedError") ||
+          errorMessage.includes("PermissionDeniedError")) {
+        alert(
+          "Microphone access is required for voice interviews.\n\n" +
+          "Please:\n" +
+          "1. Click the microphone icon in your browser's address bar\n" +
+          "2. Select 'Allow' for microphone access\n" +
+          "3. Refresh this page and try again"
+        );
+      } else if (errorMessage.includes("WebRTC") || errorMessage.includes("RTCPeerConnection")) {
+        alert(
+          "Voice interviews require a browser with WebRTC support.\n\n" +
+          "Please use Chrome, Edge, or Firefox and ensure you're on a secure context (HTTPS or localhost)."
+        );
+      } else {
+        alert(errorMessage || "Error starting call. Check console/network for details.");
+      }
+      
       setCallStatus(CallStatus.INACTIVE);
     }
   };
@@ -771,20 +886,58 @@ const Agent = ({
 
       <div className="w-full flex justify-center">
         {callStatus !== "ACTIVE" ? (
-          <button className="relative btn-call" onClick={() => handleCall()}>
-            <span
-              className={cn(
-                "absolute animate-ping rounded-full opacity-75",
-                callStatus !== "CONNECTING" && "hidden"
-              )}
-            />
+          <div className="flex flex-col items-center gap-4 w-full max-w-md">
+            <div className="flex items-center justify-center gap-3 p-3 rounded-lg bg-gray-50 border border-gray-200">
+              <svg
+                className={cn(
+                  "w-5 h-5",
+                  micPermission === "granted" && "text-green-600",
+                  micPermission === "denied" && "text-red-600",
+                  micPermission === "unknown" && "text-gray-400"
+                )}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d={micPermission === "granted" 
+                    ? "M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"
+                    : micPermission === "denied"
+                    ? "M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z M10 19l-7-7m0 0l7-7m-7 7h18"
+                    : "M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"}
+                />
+              </svg>
+              <span className="text-sm text-gray-600">
+                {micPermission === "granted" && "Microphone ready ✓"}
+                {micPermission === "denied" && "Microphone access denied - click test button"}
+                {micPermission === "unknown" && "Checking microphone..."}
+              </span>
+              <button
+                onClick={testMicrophone}
+                disabled={callStatus === "CONNECTING"}
+                className="px-3 py-1 text-xs font-medium text-blue-600 hover:text-blue-700 underline disabled:opacity-50"
+              >
+                Test Mic
+              </button>
+            </div>
+            <button className="relative btn-call" onClick={() => handleCall()}>
+              <span
+                className={cn(
+                  "absolute animate-ping rounded-full opacity-75",
+                  callStatus !== "CONNECTING" && "hidden"
+                )}
+              />
 
-            <span className="relative">
-              {callStatus === "INACTIVE" || callStatus === "FINISHED"
-                ? "Call"
-                : ". . ."}
-            </span>
-          </button>
+              <span className="relative">
+                {callStatus === "INACTIVE" || callStatus === "FINISHED"
+                  ? "Start Interview"
+                  : ". . ."}
+              </span>
+            </button>
+          </div>
         ) : (
           <button className="btn-disconnect" onClick={() => handleDisconnect()}>
             Finish Interview

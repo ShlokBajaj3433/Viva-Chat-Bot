@@ -8,7 +8,10 @@ const Page = async () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50">
-      <GenerateInterviewWrapper userName={displayName} userId={user?.id} />
+      <GenerateInterviewWrapper
+        userName={displayName}
+        userId={user?.id ?? user?.uid}
+      />
     </div>
   );
 };

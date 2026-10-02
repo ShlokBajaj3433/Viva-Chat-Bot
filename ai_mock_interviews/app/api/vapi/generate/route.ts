@@ -27,6 +27,17 @@ export async function POST(request: Request) {
       ? isTechnical
       : (type ?? "").toString().toLowerCase().includes("technical");
 
+  if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+    return Response.json(
+      {
+        success: false,
+        message:
+          "Gemini is not configured. Add a valid GOOGLE_GENERATIVE_AI_API_KEY to .env.local and restart the server.",
+      },
+      { status: 503 }
+    );
+  }
+
   const prompt = `Prepare ${amount} viva/interview questions for college students.
 - Subject/Course: ${subjectVal}
 - Year/Semester: ${yearVal}
@@ -107,9 +118,17 @@ Instructions:
       message: error instanceof Error ? error.message : String(error),
       stack: error instanceof Error ? error.stack : undefined,
     });
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const isInvalidApiKey = /api key not valid|invalid api key/i.test(errorMessage);
+
     return Response.json(
-      { success: false, error: String(error) },
-      { status: 500 }
+      {
+        success: false,
+        message: isInvalidApiKey
+          ? "The Gemini API key is invalid. Replace GOOGLE_GENERATIVE_AI_API_KEY in .env.local with a valid Google AI Studio key, then restart the server."
+          : "Unable to generate interview questions. Please try again.",
+      },
+      { status: isInvalidApiKey ? 503 : 500 }
     );
   }
 }

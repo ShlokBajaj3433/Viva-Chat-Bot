@@ -19,6 +19,28 @@ const GenerateInterviewWrapper = ({
   const [error, setError] = useState<string | null>(null);
   const [interviewData, setInterviewData] = useState<any>(null);
 
+  const testMicrophone = async () => {
+    try {
+      if (typeof window === "undefined" || !navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        alert("Microphone access is not supported in this browser. Please use Chrome, Edge, or Firefox.");
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach((track) => track.stop());
+      alert("✅ Microphone is working correctly! You can now start the interview.");
+    } catch (error) {
+      console.error("Microphone test failed:", error);
+      alert(
+        "❌ Microphone access denied or not available.\n\n" +
+        "Please:\n" +
+        "1. Click the microphone icon in your browser's address bar\n" +
+        "2. Select 'Allow' for microphone access\n" +
+        "3. Refresh this page and try again"
+      );
+    }
+  };
+
   // Load prefilled interview data on component mount
   useEffect(() => {
     console.log("📦 GenerateInterviewWrapper mounted - checking sessionStorage...");
@@ -199,6 +221,27 @@ const GenerateInterviewWrapper = ({
           <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-8">
             <p className="text-sm text-amber-900">
               💡 <strong>Tip:</strong> Find a quiet place, ensure good lighting, and test your microphone before starting.
+            </p>
+          </div>
+
+          <div className="mb-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                </svg>
+                <span className="font-medium text-blue-900">Microphone Check</span>
+              </div>
+              <button
+                onClick={testMicrophone}
+                disabled={isCreating}
+                className="px-4 py-2 text-sm font-medium text-blue-600 bg-white border border-blue-300 rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50"
+              >
+                Test Microphone
+              </button>
+            </div>
+            <p className="text-xs text-blue-700 mt-2 ml-9">
+              Click to verify your microphone works before starting the interview
             </p>
           </div>
 

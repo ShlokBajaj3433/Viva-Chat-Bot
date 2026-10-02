@@ -10,12 +10,46 @@ export async function createFeedback(params: CreateFeedbackParams) {
   const { interviewId, userId, transcript, feedbackId, duration } = params;
 
   try {
+    // CRITICAL VALIDATION: Ensure interview has meaningful content
+    if (!transcript || !Array.isArray(transcript) || transcript.length === 0) {
+      console.error("❌ Cannot create feedback: No transcript provided");
+      return { 
+        success: false, 
+        error: "Interview must be completed with answers before generating feedback" 
+      };
+    }
+
+    // Count meaningful answers (exclude greetings and pleasantries)
+    const meaningfulAnswers = transcript.filter((msg: any) => {
+      const content = msg.content?.toLowerCase() || '';
+      const isGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|how are you|what's your name|tell me about yourself|are you ready)/i.test(content.trim());
+      return msg.role === 'user' && !isGreeting && content.length > 10;
+    }).length;
+
+    // Require at least 3 meaningful answers to generate feedback
+    if (meaningfulAnswers < 3) {
+      console.error(`❌ Cannot create feedback: Only ${meaningfulAnswers} meaningful answers provided (minimum 3 required)`);
+      return { 
+        success: false, 
+        error: `Interview incomplete: Only ${meaningfulAnswers} answers provided. Minimum 3 required.` 
+      };
+    }
+
     // Get interview details for context
     const interviewDoc = await db
       .collection("interviews")
       .doc(interviewId)
       .get();
     const interviewData = interviewDoc.data();
+
+    // Verify interview is finalized
+    if (!interviewData?.finalized) {
+      console.error("❌ Cannot create feedback: Interview not finalized");
+      return { 
+        success: false, 
+        error: "Interview must be completed and finalized before generating feedback" 
+      };
+    }
 
     const formattedTranscript = transcript
       .map(

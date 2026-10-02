@@ -61,28 +61,33 @@ export async function signUp(params: SignUpParams) {
       throw new Error("Firebase not initialized");
     }
 
-    // Check if user already exists
+    // Resolve user in Firebase Auth (client may have created it already)
+    let userRecord = null;
     try {
-      const existingUser = await adminAuth.getUserByEmail(email);
-      if (existingUser) {
-        return {
-          success: false,
-          message: "Email already in use. Please sign in.",
-        };
-      }
+      userRecord = await adminAuth.getUserByEmail(email);
     } catch (error: any) {
-      // User doesn't exist, which is good for sign up
       if (error.code !== "auth/user-not-found") {
         throw error;
       }
     }
 
-    // Create user in Firebase Auth
-    const userRecord = await adminAuth.createUser({
-      email,
-      password,
-      displayName,
-    });
+    // If not found in Auth, create it (server-only flow)
+    if (!userRecord) {
+      userRecord = await adminAuth.createUser({
+        email,
+        password,
+        displayName,
+      });
+    }
+
+    // If Firestore user doc already exists, treat as existing account
+    const userDoc = await adminDb.collection("users").doc(userRecord.uid).get();
+    if (userDoc.exists) {
+      return {
+        success: false,
+        message: "Email already in use. Please sign in.",
+      };
+    }
 
     // Save user data to Firestore
     await adminDb.collection("users").doc(userRecord.uid).set({
@@ -183,13 +188,15 @@ export async function getCurrentUser(): Promise<User | null> {
       return null;
     }
 
+    const userData = userDoc.data();
+
     return {
-      uid: userDoc.data()?.uid,
-      id: userDoc.data()?.uid,
-      displayName: userDoc.data()?.displayName,
-      name: userDoc.data()?.displayName,
-      email: userDoc.data()?.email,
-      role: userDoc.data()?.role,
+      uid: decodedClaims.uid,
+      id: decodedClaims.uid,
+      displayName: userData?.displayName,
+      name: userData?.displayName,
+      email: userData?.email || decodedClaims.email || "",
+      role: userData?.role,
     } as User;
   } catch (error) {
     console.error("Get current user error:", error);

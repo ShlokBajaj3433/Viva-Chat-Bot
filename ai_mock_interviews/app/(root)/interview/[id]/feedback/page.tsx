@@ -18,6 +18,94 @@ const Feedback = async ({ params }: RouteParams) => {
   const interview = await getInterviewById(id);
   if (!interview) redirect("/");
 
+  // CRITICAL SECURITY CHECK: Verify interview completion
+  // Prevent access to results without completing the interview
+  const hasTranscript = interview.transcript && Array.isArray(interview.transcript) && interview.transcript.length > 0;
+  const isFinalized = interview.finalized === true;
+  
+  // Count actual subject-related questions (exclude greetings/pleasantries)
+  let meaningfulAnswers = 0;
+  if (hasTranscript) {
+    meaningfulAnswers = interview.transcript.filter((msg: any) => {
+      const content = msg.content?.toLowerCase() || '';
+      // Exclude common greetings and non-subject questions
+      const isGreeting = /^(hi|hello|hey|good morning|good afternoon|good evening|how are you|what's your name|tell me about yourself|are you ready)/i.test(content.trim());
+      return msg.role === 'user' && !isGreeting && content.length > 10;
+    }).length;
+  }
+
+  // If interview is not properly completed, deny access to feedback
+  if (!isFinalized || !hasTranscript || meaningfulAnswers < 3) {
+    return (
+      <section className="min-h-screen bg-gradient-to-br from-gray-50 via-red-50 to-orange-50 py-12 px-4">
+        <div className="max-w-5xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl md:text-5xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent mb-3">
+              ⚠️ Interview Not Completed
+            </h1>
+          </div>
+          <div className="bg-white rounded-2xl shadow-xl p-12 text-center border-2 border-red-200">
+            <div className="mb-6">
+              <div className="text-6xl mb-4">🚫</div>
+              <h2 className="text-2xl font-semibold text-gray-800 mb-4">
+                Cannot Generate Feedback
+              </h2>
+              <div className="text-left max-w-2xl mx-auto bg-red-50 border border-red-200 rounded-lg p-6 mb-6">
+                <p className="text-gray-700 mb-3">
+                  <strong>Why can't I see my results?</strong>
+                </p>
+                <ul className="list-disc list-inside space-y-2 text-gray-600">
+                  <li>You must complete the interview session first</li>
+                  <li>At least 3 meaningful answers are required</li>
+                  <li>The interview must be properly finalized</li>
+                  <li>Simply starting an interview doesn't generate results</li>
+                </ul>
+              </div>
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <p className="text-sm text-blue-900">
+                  💡 <strong>Tip:</strong> Complete your interview by answering all questions thoroughly. 
+                  Your feedback will be automatically generated once you finish.
+                </p>
+              </div>
+              <p className="text-gray-600 mb-2">
+                <strong>Interview Status:</strong>
+              </p>
+              <div className="inline-block bg-gray-100 rounded-lg px-6 py-3 text-left">
+                <p className="text-sm text-gray-700">
+                  ✓ Finalized: <span className={isFinalized ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                    {isFinalized ? "Yes" : "No - Interview not completed"}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-700">
+                  ✓ Has Answers: <span className={hasTranscript ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                    {hasTranscript ? "Yes" : "No - No responses recorded"}
+                  </span>
+                </p>
+                <p className="text-sm text-gray-700">
+                  ✓ Meaningful Answers: <span className={meaningfulAnswers >= 3 ? "text-green-600 font-semibold" : "text-red-600 font-semibold"}>
+                    {meaningfulAnswers} / 3 minimum required
+                  </span>
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4 justify-center">
+              <Link href={`/interview/${id}`}>
+                <Button className="bg-blue-600 hover:bg-blue-700">
+                  📝 Complete Interview
+                </Button>
+              </Link>
+              <Link href="/dashboard">
+                <Button variant="outline">
+                  🏠 Return to Dashboard
+                </Button>
+              </Link>
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  }
+
   const feedback = await getFeedbackByInterviewId({
     interviewId: id,
     userId: user?.id!,
